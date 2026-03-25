@@ -23,4 +23,12 @@ npm run dev
 
 ## Despliegue y versiones fijas
 
-Las dependencias están **pinned** en `package.json`; el lockfile define el árbol exacto. Detalles en [DEPLOY.md](./DEPLOY.md).
+Las dependencias están **pinned** en `package.json`; el lockfile define el árbol exacto.
+
+La guía **[DEPLOY.md](./DEPLOY.md)** incluye también:
+
+- modelo de almacenamiento (`data/runtime`, sin SQL);
+- producción en tu máquina o VPS (systemd, persistencia);
+- opciones para exponer el sitio en internet (Vercel vs servidor propio vs túnel);
+- implicaciones de **Vercel** con el almacenamiento actual;
+- seguridad y actualización de dependencias.
