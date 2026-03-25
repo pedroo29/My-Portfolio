@@ -1,0 +1,11 @@
+services:
+  portfolio:
+    build: .
+    container_name: portfolio-platform
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/runtime:/app/data/runtime

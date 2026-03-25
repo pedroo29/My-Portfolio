@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --background: #07111f;
+  --background-soft: #0e1726;
+  --surface: rgba(15, 23, 42, 0.78);
+  --surface-strong: rgba(15, 23, 42, 0.92);
+  --border: rgba(148, 163, 184, 0.18);
+  --text: #e2e8f0;
+  --text-soft: #94a3b8;
+  --accent: #22d3ee;
+  --accent-soft: rgba(34, 211, 238, 0.12);
+  --danger: #fb7185;
+  --success: #34d399;
+  --warning: #fbbf24;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(34, 211, 238, 0.08), transparent 30%),
+    linear-gradient(180deg, #020617 0%, #07111f 100%);
+  color: var(--text);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes softGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(34, 211, 238, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 32px rgba(34, 211, 238, 0.12);
+  }
+}
+
+@keyframes floatAmbient {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.22);
+}
+
+.container-shell {
+  margin: 0 auto;
+  width: min(1180px, calc(100% - 2rem));
+}
+
+.panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.reveal-up {
+  animation: fadeUp 0.6s ease-out both;
+}
+
+.delay-1 {
+  animation-delay: 0.08s;
+}
+
+.delay-2 {
+  animation-delay: 0.16s;
+}
+
+.delay-3 {
+  animation-delay: 0.24s;
+}
+
+.delay-4 {
+  animation-delay: 0.32s;
+}
+
+.interactive-lift {
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.interactive-lift:hover {
+  transform: translateY(-4px);
+  border-color: rgba(34, 211, 238, 0.2);
+  box-shadow:
+    0 18px 40px rgba(2, 6, 23, 0.35),
+    0 0 0 1px rgba(34, 211, 238, 0.04);
+}
+
+.soft-glow {
+  animation: softGlow 4.8s ease-in-out infinite;
+}
+
+.ambient-float {
+  animation: floatAmbient 6s ease-in-out infinite;
+}
+
+@keyframes skillProgressBarGrow {
+  from {
+    width: 0%;
+  }
+
+  to {
+    width: var(--skill-progress, 0%);
+  }
+}
+
+.skill-progress-fill {
+  width: 0%;
+  animation: skillProgressBarGrow 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.prose-copy p {
+  color: var(--text-soft);
+  line-height: 1.75;
+}
+
+.prose-copy h1,
+.prose-copy h2,
+.prose-copy h3,
+.prose-copy h4 {
+  letter-spacing: -0.02em;
+}
+
+.prose-copy ul,
+.prose-copy ol {
+  margin: 1rem 0;
+}
+
+.prose-copy li > p {
+  margin: 0;
+}
+
+.prose-copy table {
+  width: 100%;
+}
+
+.prose-copy th,
+.prose-copy td {
+  vertical-align: top;
+}
+
+.documentation-body {
+  font-size: 1.05rem;
+}
+
+.documentation-body p {
+  max-width: 78ch;
+}
+
+.documentation-body img,
+.documentation-body video {
+  max-height: 34rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal-up,
+  .soft-glow,
+  .ambient-float {
+    animation: none !important;
+  }
+
+  .interactive-lift,
+  .interactive-lift:hover {
+    transition: none;
+    transform: none;
+  }
+
+  .skill-progress-fill {
+    animation: none;
+    width: var(--skill-progress, 0%) !important;
+  }
+}

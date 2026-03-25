@@ -1,0 +1,14 @@
+[Unit]
+Description=Self-hosted portfolio platform
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pedro/Escritorio/My-Portfolio-v3
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+EnvironmentFile=/home/pedro/Escritorio/My-Portfolio-v3/.env
+
+[Install]
+WantedBy=multi-user.target
