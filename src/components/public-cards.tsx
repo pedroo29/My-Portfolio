@@ -5,6 +5,7 @@ import { SkillProgressBar } from "@/components/skill-progress-bar";
 import { Badge, Panel } from "@/components/ui";
 import {
   certificationStateLabels,
+  certificationsVisualLabels,
   labLevelLabels,
   labStateLabels,
   milestoneStateLabels,
@@ -93,30 +94,80 @@ export function SkillCard({
   );
 }
 
+const certificationTimelineBorder: Record<keyof typeof certificationStateLabels, string> = {
+  completed: "border-l-emerald-500/90",
+  "in-progress": "border-l-cyan-400/90",
+  planned: "border-l-amber-400/85"
+};
+
+const certificationBrowseTop: Record<keyof typeof certificationStateLabels, string> = {
+  completed: "border-t-emerald-500/95",
+  "in-progress": "border-t-cyan-400/95",
+  planned: "border-t-amber-400/90"
+};
+
 export function CertificationCard({
+  locale,
   title,
   provider,
   state,
   date,
-  note
+  note,
+  variant = "timeline"
 }: {
+  locale: Locale;
   title: string;
   provider: string;
   state: keyof typeof certificationStateLabels;
   date: string;
   note: string;
+  /** `browse`: tarjeta compacta para rejilla con muchos ítems filtrados. */
+  variant?: "timeline" | "browse";
 }) {
+  const showDate = state !== "planned";
+  const formattedDate =
+    date && !Number.isNaN(Date.parse(date))
+      ? new Date(date).toLocaleDateString(locale === "de" ? "de-DE" : "en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric"
+        })
+      : date;
+
+  const isBrowse = variant === "browse";
+
   return (
-    <Panel className="interactive-lift reveal-up space-y-3">
-      <div className="flex flex-wrap gap-2">
-        <Badge tone="accent">{provider}</Badge>
-        <Badge tone={state === "completed" ? "success" : state === "planned" ? "warning" : "accent"}>
-          {certificationStateLabels[state]}
-        </Badge>
+    <Panel
+      className={
+        isBrowse
+          ? `interactive-lift reveal-up space-y-3 border border-slate-800/85 bg-slate-950/50 p-5 shadow-lg shadow-slate-950/25 border-t-2 ${certificationBrowseTop[state]}`
+          : `interactive-lift reveal-up border-l-4 ${certificationTimelineBorder[state]} space-y-4 bg-slate-950/40 pl-5 shadow-lg shadow-slate-950/30`
+      }
+    >
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div className="flex flex-wrap gap-2">
+          <Badge tone="accent">{provider}</Badge>
+          <Badge tone={state === "completed" ? "success" : state === "planned" ? "warning" : "accent"}>
+            {certificationsVisualLabels[locale].stateChips[state]}
+          </Badge>
+        </div>
+        {showDate ? (
+          <p
+            className={
+              isBrowse
+                ? "shrink-0 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500"
+                : "shrink-0 text-xs font-medium uppercase tracking-[0.2em] text-cyan-200/90"
+            }
+          >
+            <span className="sr-only">{certificationsVisualLabels[locale].dateLabel}: </span>
+            {formattedDate}
+          </p>
+        ) : null}
       </div>
-      <h3 className="text-lg font-semibold text-slate-50">{title}</h3>
-      <p className="text-sm text-slate-400">{note}</p>
-      <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{date}</p>
+      <h3 className={isBrowse ? "line-clamp-2 text-base font-semibold leading-snug text-slate-50" : "text-lg font-semibold leading-snug text-slate-50"}>
+        {title}
+      </h3>
+      <p className={isBrowse ? "line-clamp-3 text-sm leading-relaxed text-slate-400" : "text-sm leading-relaxed text-slate-400"}>{note}</p>
     </Panel>
   );
 }

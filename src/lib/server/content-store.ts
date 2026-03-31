@@ -10,6 +10,7 @@ import type {
   ContentStore,
   GlobalContent,
   HealthStatus,
+  LabLevel,
   MediaAsset
 } from "@/lib/types";
 import { slugify } from "@/lib/utils";
@@ -51,6 +52,32 @@ function createActivityEvent(collection: string, targetId: string, type: Activit
   };
 }
 
+function pickSkillLevelFromProgress(progress: number): LabLevel {
+  if (progress >= 70) {
+    return "advanced";
+  }
+  if (progress >= 40) {
+    return "intermediate";
+  }
+  return "foundational";
+}
+
+function normalizeSkillEntity<T extends { progress?: unknown; level?: LabLevel }>(
+  key: CollectionKey,
+  entity: T
+): T {
+  if (key !== "skills") {
+    return entity;
+  }
+  const rawProgress = typeof entity.progress === "number" ? entity.progress : Number(entity.progress);
+  const safeProgress = Number.isFinite(rawProgress) ? Math.max(0, Math.min(100, Math.round(rawProgress))) : 0;
+  return {
+    ...entity,
+    progress: safeProgress,
+    level: pickSkillLevelFromProgress(safeProgress)
+  };
+}
+
 export async function listCollection<T>(key: CollectionKey): Promise<T[]> {
   const store = await readStore();
   return store[key] as unknown as T[];
@@ -78,15 +105,16 @@ export async function saveCollectionEntity<T extends { id?: string; slug?: strin
 ) {
   const store = await readStore();
   const collection = [...(store[key] as unknown as T[])];
+  const normalizedEntity = normalizeSkillEntity(key, entity as T & { progress?: unknown; level?: LabLevel }) as T;
   const safeEntity = {
-    ...entity,
-    id: entity.id || `${key}-${Date.now()}`,
+    ...normalizedEntity,
+    id: normalizedEntity.id || `${key}-${Date.now()}`,
     slug:
-      "slug" in entity && typeof entity.slug === "string" && entity.slug
-        ? entity.slug
+      "slug" in normalizedEntity && typeof normalizedEntity.slug === "string" && normalizedEntity.slug
+        ? normalizedEntity.slug
         : slugify(
-            (entity as { locales?: { en?: { title?: string; name?: string } } }).locales?.en?.title ??
-              (entity as { locales?: { en?: { title?: string; name?: string } } }).locales?.en?.name ??
+            (normalizedEntity as { locales?: { en?: { title?: string; name?: string } } }).locales?.en?.title ??
+              (normalizedEntity as { locales?: { en?: { title?: string; name?: string } } }).locales?.en?.name ??
               `${key}-${Date.now()}`
           )
   } as T & { id: string; slug: string };

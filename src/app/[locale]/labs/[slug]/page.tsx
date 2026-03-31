@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { LabDocToc } from "@/components/lab-doc-toc";
 import { MarkdownRenderer } from "@/components/markdown/markdown-renderer";
 import { Badge, Panel, Section } from "@/components/ui";
 import { getCatalogs, getLabBySlug, getLabs, getSkills, resolveCategoryLabel, resolveTagLabels } from "@/lib/content";
+import { extractMarkdownHeadings } from "@/lib/markdown-headings";
 import { readStore } from "@/lib/server/content-store";
 import { formatDate } from "@/lib/utils";
 import type { Locale } from "@/lib/types";
@@ -31,6 +33,7 @@ export default async function LabDetailPage({
   const relatedLabs = labs.filter((item) => item.id !== lab.id && item.tags.some((tag) => lab.tags.includes(tag))).slice(0, 2);
   const relatedSkills = skills.filter((skill) => lab.skillIds.includes(skill.id));
   const relatedMedia = store.media.filter((asset) => lab.mediaIds.includes(asset.id));
+  const documentationHeadings = extractMarkdownHeadings(lab.content.documentation, 3);
 
   return (
     <div className="space-y-12">
@@ -184,6 +187,8 @@ export default async function LabDetailPage({
           </div>
         </Section>
       ) : null}
+
+      <LabDocToc locale={typedLocale} headings={documentationHeadings} />
     </div>
   );
 }

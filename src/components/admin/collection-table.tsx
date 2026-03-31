@@ -99,7 +99,10 @@ export function CollectionTable({
                 {row.cells.map((cell, index) => (
                   <td key={`${row.id}-${index}`} className="px-5 py-4 align-top text-sm text-slate-200">
                     {index === 0 ? (
-                      <Link href={`${editBasePath}/${row.id}`} className="focus-ring font-medium text-cyan-200 hover:text-cyan-100">
+                      <Link
+                        href={`${editBasePath}/${encodeURIComponent(row.id)}`}
+                        className="focus-ring font-medium text-cyan-200 hover:text-cyan-100"
+                      >
                         {cell}
                       </Link>
                     ) : (

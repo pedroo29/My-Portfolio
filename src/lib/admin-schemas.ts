@@ -142,16 +142,11 @@ export const collectionSchemas: Record<CollectionKey, CollectionSchema> = {
             ]
           },
           {
-            label: "Level",
-            path: "level",
-            type: "select",
-            options: [
-              { value: "foundational", label: "Foundational" },
-              { value: "intermediate", label: "Intermediate" },
-              { value: "advanced", label: "Advanced" }
-            ]
-          },
-          { label: "Progress", path: "progress", type: "number" }
+            label: "Progress (%)",
+            path: "progress",
+            type: "number",
+            description: "Level is auto-calculated on save: 0-39 Foundational, 40-69 Intermediate, 70-100 Advanced."
+          }
         ]
       },
       {

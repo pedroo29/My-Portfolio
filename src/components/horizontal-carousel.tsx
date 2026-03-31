@@ -74,11 +74,11 @@ export function HorizontalCarousel({
     <div className={cn("relative", className)}>
       {/* Degradados más estrechos y suaves para no comerse el contenido de las cards */}
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-7 bg-gradient-to-r from-[var(--background)] from-20% via-[var(--background)]/35 to-transparent sm:w-9 md:w-10"
+        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-8 bg-gradient-to-r from-[var(--background)] from-15% via-[var(--background)]/50 via-50% to-transparent sm:w-10 md:w-12"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-[1] w-7 bg-gradient-to-l from-[var(--background)] from-20% via-[var(--background)]/35 to-transparent sm:w-9 md:w-10"
+        className="pointer-events-none absolute inset-y-0 right-0 z-[1] w-8 bg-gradient-to-l from-[var(--background)] from-15% via-[var(--background)]/50 via-50% to-transparent sm:w-10 md:w-12"
         aria-hidden
       />
 

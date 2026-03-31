@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { extractMarkdownHeadings, slugifyHeading } from "@/lib/markdown-headings";
 import type { Locale, MediaAsset } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -61,24 +63,57 @@ function MediaEmbed({
 
 function MarkdownChunk({
   content,
-  className
+  className,
+  getNextHeadingId
 }: {
   content: string;
   className?: string;
+  getNextHeadingId: () => string | undefined;
 }) {
   if (!content.trim()) {
     return null;
   }
+
+  const readNodeText = (node: ReactNode): string => {
+    if (typeof node === "string" || typeof node === "number") return String(node);
+    if (Array.isArray(node)) return node.map(readNodeText).join("");
+    if (node && typeof node === "object" && "props" in node) {
+      return readNodeText((node as { props?: { children?: ReactNode } }).props?.children);
+    }
+    return "";
+  };
+
+  const resolveHeadingId = (children: ReactNode) => {
+    const candidate = getNextHeadingId();
+    if (candidate) return candidate;
+    return slugifyHeading(readNodeText(children)) || "section";
+  };
 
   return (
     <div className={className}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          h1: ({ children }) => <h1 className="mt-8 text-4xl font-semibold text-slate-50 first:mt-0">{children}</h1>,
-          h2: ({ children }) => <h2 className="mt-8 text-3xl font-semibold text-slate-50">{children}</h2>,
-          h3: ({ children }) => <h3 className="mt-6 text-2xl font-semibold text-slate-100">{children}</h3>,
-          h4: ({ children }) => <h4 className="mt-5 text-xl font-semibold text-slate-100">{children}</h4>,
+          h1: ({ children }) => (
+            <h1 id={resolveHeadingId(children)} className="scroll-mt-28 mt-8 text-4xl font-semibold text-slate-50 first:mt-0">
+              {children}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 id={resolveHeadingId(children)} className="scroll-mt-28 mt-8 text-3xl font-semibold text-slate-50">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 id={resolveHeadingId(children)} className="scroll-mt-28 mt-6 text-2xl font-semibold text-slate-100">
+              {children}
+            </h3>
+          ),
+          h4: ({ children }) => (
+            <h4 id={resolveHeadingId(children)} className="scroll-mt-28 mt-5 text-xl font-semibold text-slate-100">
+              {children}
+            </h4>
+          ),
           p: ({ children }) => <p className="my-4 leading-8 text-slate-300">{children}</p>,
           a: ({ href, children }) => (
             <a
@@ -148,6 +183,8 @@ export function MarkdownRenderer({
   mediaAssets = [],
   className
 }: MarkdownRendererProps) {
+  const headingIds = extractMarkdownHeadings(content, 4).map((item) => item.id);
+  let headingCursor = 0;
   const segments = content.split(/(\{\{media:[^}]+\}\})/g);
 
   return (
@@ -166,7 +203,17 @@ export function MarkdownRenderer({
           );
         }
 
-        return <MarkdownChunk key={`markdown-${index}`} content={segment} />;
+        return (
+          <MarkdownChunk
+            key={`markdown-${index}`}
+            content={segment}
+            getNextHeadingId={() => {
+              const id = headingIds[headingCursor];
+              headingCursor += 1;
+              return id;
+            }}
+          />
+        );
       })}
     </div>
   );

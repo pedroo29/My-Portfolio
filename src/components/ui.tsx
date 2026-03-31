@@ -7,16 +7,19 @@ export function Section({
   title,
   description,
   action,
-  children
+  children,
+  className
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
+  /** Espaciado vertical entre cabecera y contenido (p. ej. `space-y-5` en home). */
+  className?: string;
 }) {
   return (
-    <section className="reveal-up space-y-6">
+    <section className={cn("reveal-up", className ?? "space-y-6")}>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
           {eyebrow ? <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">{eyebrow}</p> : null}
@@ -76,10 +79,10 @@ export function CTAButton({
     <Link
       href={href}
       className={cn(
-        "focus-ring interactive-lift inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium transition",
+        "focus-ring interactive-lift inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition",
         secondary
           ? "border border-slate-700 bg-slate-900/70 text-slate-100 hover:border-cyan-300/40 hover:text-cyan-100"
-          : "soft-glow bg-cyan-400 text-slate-950 hover:bg-cyan-300"
+          : "soft-glow bg-cyan-500 text-slate-950 antialiased shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-cyan-400"
       )}
     >
       {children}

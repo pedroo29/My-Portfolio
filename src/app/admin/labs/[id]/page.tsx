@@ -6,6 +6,7 @@ import { collectionSchemas, createBlankEntity } from "@/lib/admin-schemas";
 import { getAdminOptions } from "@/lib/admin-options";
 import { getEntityById, readStore } from "@/lib/server/content-store";
 import { requireAdminSession } from "@/lib/server/auth";
+import { decodeAdminRouteId } from "@/lib/admin-route-id";
 
 export default async function AdminLabEditorPage({
   params
@@ -13,7 +14,8 @@ export default async function AdminLabEditorPage({
   params: Promise<{ id: string }>;
 }) {
   await requireAdminSession();
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const id = rawId === "new" ? "new" : decodeAdminRouteId(rawId);
   const initial = id === "new" ? createBlankEntity("labs") : await getEntityById("labs", id);
 
   if (!initial) {

@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed:store": "tsx scripts/write-seed-store.ts"
   },
   "dependencies": {
     "next": "16.2.1",
@@ -29,6 +30,7 @@
     "eslint-config-next": "16.2.1",
     "postcss": "8.5.8",
     "tailwindcss": "4.2.2",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3"
   }
 }

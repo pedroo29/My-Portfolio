@@ -209,8 +209,9 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
     setBaseline(JSON.stringify(savedData));
     setMessage({ tone: "success", text: "Changes saved successfully." });
 
-    if (pathname.endsWith("/new") && savedData.id) {
-      router.replace(pathname.replace(/\/new$/, `/${savedData.id}`));
+    if (/\/new\/?$/.test(pathname) && savedData.id) {
+      const nextId = encodeURIComponent(String(savedData.id));
+      router.replace(pathname.replace(/\/new\/?$/, `/${nextId}`));
     } else {
       router.refresh();
     }
