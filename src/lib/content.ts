@@ -13,7 +13,7 @@ import type {
 } from "@/lib/types";
 import { makeOption, pickLocalized, slugify } from "@/lib/utils";
 
-function normalizeMilestoneSlugParam(slug: string): string {
+function normalizeSlugParam(slug: string): string {
   try {
     return decodeURIComponent(slug.replace(/\+/g, " ")).trim();
   } catch {
@@ -21,8 +21,9 @@ function normalizeMilestoneSlugParam(slug: string): string {
   }
 }
 
-function milestoneSlugMatches(itemSlug: string, param: string): boolean {
-  const raw = normalizeMilestoneSlugParam(param);
+/** Coincide slug en store con el segmento de URL (espacios, encoding, forma slugify). */
+function storeSlugMatches(itemSlug: string, param: string): boolean {
+  const raw = normalizeSlugParam(param);
   if (itemSlug === param) return true;
   if (itemSlug === raw) return true;
   if (slugify(itemSlug) === slugify(raw)) return true;
@@ -95,7 +96,7 @@ export async function getSkills(locale: Locale) {
 
 export async function getSkillBySlug(locale: Locale, slug: string) {
   const store = await readStore();
-  const skill = store.skills.find((item) => item.slug === slug && item.status !== "archived");
+  const skill = store.skills.find((item) => item.status !== "archived" && storeSlugMatches(item.slug, slug));
   if (!skill) return undefined;
 
   return {
@@ -170,7 +171,7 @@ export function getRoadmapFocusForHome<
 export async function getMilestoneBySlug(locale: Locale, slug: string) {
   const store = await readStore();
   const milestone = store.roadmapMilestones.find(
-    (item) => item.status !== "archived" && milestoneSlugMatches(item.slug, slug)
+    (item) => item.status !== "archived" && storeSlugMatches(item.slug, slug)
   );
   if (!milestone) return undefined;
 

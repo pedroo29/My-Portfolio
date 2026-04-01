@@ -8,6 +8,8 @@ import { labLevelLabels, skillDetailLabels } from "@/lib/constants";
 import { getCatalogs, getLabs, getSkillBySlug, resolveCategoryLabel } from "@/lib/content";
 import type { Locale } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function SkillDetailPage({
   params
 }: {

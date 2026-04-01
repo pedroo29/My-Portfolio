@@ -120,7 +120,9 @@ export async function saveCollectionEntity<T extends { id?: string; slug?: strin
   } as T & { id: string; slug: string };
 
   const persisted: typeof safeEntity =
-    key === "roadmapMilestones" ? { ...safeEntity, slug: slugify(safeEntity.slug) } : safeEntity;
+    key === "roadmapMilestones" || key === "skills"
+      ? { ...safeEntity, slug: slugify(safeEntity.slug) }
+      : safeEntity;
 
   const index = collection.findIndex((item) => item.id === persisted.id);
 
