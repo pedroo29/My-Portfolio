@@ -146,7 +146,13 @@ function MilestoneBentoCard({
       </div>
 
       <h3 className={featured ? "text-xl font-semibold text-slate-50 md:text-2xl" : "text-lg font-semibold text-slate-50"}>{milestone.content.title}</h3>
-      <p className={featured ? "mt-3 max-w-xl text-sm text-slate-300" : "mt-2 text-sm text-slate-400"}>{milestone.content.summary}</p>
+      <p
+        className={cn(
+          featured ? "mt-3 max-w-xl text-sm text-slate-300" : "mt-2 line-clamp-3 text-sm text-slate-400"
+        )}
+      >
+        {milestone.content.summary}
+      </p>
 
       <p className={cn("mt-4 text-sm font-medium transition group-hover:text-slate-100", accent.text)}>{labels.openMilestoneCta}</p>
     </Link>

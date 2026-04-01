@@ -130,6 +130,84 @@ export const roadmapVisualLabels: Record<
   }
 };
 
+/** Detalle público de un milestone (habilidades y certificaciones en destaque). */
+export const milestoneDetailLabels: Record<
+  Locale,
+  {
+    backToRoadmap: string;
+    heroEyebrow: string;
+    outcomesTitle: string;
+    outcomesDescription: string;
+    metaStart: string;
+    metaEnd: string;
+    metaEffort: string;
+    notSet: string;
+    skillsEyebrow: string;
+    skillsTitle: string;
+    skillsDescription: string;
+    skillsEmpty: string;
+    certsEyebrow: string;
+    certsTitle: string;
+    certsDescription: string;
+    certsEmpty: string;
+    certsViewAll: string;
+    otherMilestonesTitle: string;
+    otherMilestonesDescription: string;
+    otherMilestonesCarouselRegion: string;
+    otherMilestonesCarouselPrev: string;
+    otherMilestonesCarouselNext: string;
+  }
+> = {
+  en: {
+    backToRoadmap: "Back to roadmap",
+    heroEyebrow: "Milestone overview",
+    outcomesTitle: "Outcomes",
+    outcomesDescription: "Expected deliverables and proof points for this milestone.",
+    metaStart: "Start",
+    metaEnd: "End",
+    metaEffort: "Estimated effort",
+    notSet: "Not set",
+    skillsEyebrow: "Capability focus",
+    skillsTitle: "Skills in this milestone",
+    skillsDescription: "Competencies you are exercising or validating through this work — each links to the full skill profile.",
+    skillsEmpty: "No skills linked yet. Add related skills in the admin to show them here.",
+    certsEyebrow: "Formal validation",
+    certsTitle: "Certifications in this milestone",
+    certsDescription: "Credentials and exams tied to this milestone — progress toward industry-recognized validation.",
+    certsEmpty: "No certifications linked yet. Connect certifications in the admin to highlight them here.",
+    certsViewAll: "View all certifications",
+    otherMilestonesTitle: "Other milestones in this phase",
+    otherMilestonesDescription: "Additional work that sits in the same progression phase.",
+    otherMilestonesCarouselRegion: "Other milestones in this phase",
+    otherMilestonesCarouselPrev: "Previous milestones",
+    otherMilestonesCarouselNext: "Next milestones"
+  },
+  de: {
+    backToRoadmap: "Zurück zur Roadmap",
+    heroEyebrow: "Meilenstein-Überblick",
+    outcomesTitle: "Ergebnisse",
+    outcomesDescription: "Erwartete Ergebnisse und Nachweise für diesen Meilenstein.",
+    metaStart: "Start",
+    metaEnd: "Ende",
+    metaEffort: "Geschätzter Aufwand",
+    notSet: "Nicht gesetzt",
+    skillsEyebrow: "Kompetenzfokus",
+    skillsTitle: "Skills in diesem Meilenstein",
+    skillsDescription: "Kompetenzen, die du in dieser Arbeit nutzt oder nachweist — jeder Link führt zum vollständigen Skill-Profil.",
+    skillsEmpty: "Noch keine Skills verknüpft. Verknüpfe Skills im Admin, um sie hier anzuzeigen.",
+    certsEyebrow: "Formale Validierung",
+    certsTitle: "Zertifizierungen in diesem Meilenstein",
+    certsDescription: "Nachweise und Prüfungen, die zu diesem Meilenstein gehören — Fortschritt zu anerkannten Qualifikationen.",
+    certsEmpty: "Noch keine Zertifizierungen verknüpft. Verknüpfe Zertifizierungen im Admin, um sie hier hervorzuheben.",
+    certsViewAll: "Alle Zertifizierungen ansehen",
+    otherMilestonesTitle: "Weitere Meilensteine in dieser Phase",
+    otherMilestonesDescription: "Weitere Arbeiten in derselben Fortschrittsphase.",
+    otherMilestonesCarouselRegion: "Weitere Meilensteine in dieser Phase",
+    otherMilestonesCarouselPrev: "Vorherige Meilensteine",
+    otherMilestonesCarouselNext: "Nächste Meilensteine"
+  }
+};
+
 /** Minimapa flotante en /roadmap (saltar a fases). */
 export const roadmapMinimapLabels: Record<Locale, { button: string; title: string; close: string; ariaNav: string }> = {
   en: {

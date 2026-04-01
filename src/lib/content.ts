@@ -11,7 +11,23 @@ import type {
   RoadmapPhase,
   Skill
 } from "@/lib/types";
-import { makeOption, pickLocalized } from "@/lib/utils";
+import { makeOption, pickLocalized, slugify } from "@/lib/utils";
+
+function normalizeMilestoneSlugParam(slug: string): string {
+  try {
+    return decodeURIComponent(slug.replace(/\+/g, " ")).trim();
+  } catch {
+    return slug.trim();
+  }
+}
+
+function milestoneSlugMatches(itemSlug: string, param: string): boolean {
+  const raw = normalizeMilestoneSlugParam(param);
+  if (itemSlug === param) return true;
+  if (itemSlug === raw) return true;
+  if (slugify(itemSlug) === slugify(raw)) return true;
+  return false;
+}
 
 export async function getPublicStore() {
   return readStore();
@@ -153,7 +169,9 @@ export function getRoadmapFocusForHome<
 
 export async function getMilestoneBySlug(locale: Locale, slug: string) {
   const store = await readStore();
-  const milestone = store.roadmapMilestones.find((item) => item.slug === slug && item.status !== "archived");
+  const milestone = store.roadmapMilestones.find(
+    (item) => item.status !== "archived" && milestoneSlugMatches(item.slug, slug)
+  );
   if (!milestone) return undefined;
 
   return {

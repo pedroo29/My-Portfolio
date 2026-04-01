@@ -118,7 +118,11 @@ export async function saveCollectionEntity<T extends { id?: string; slug?: strin
               `${key}-${Date.now()}`
           )
   } as T & { id: string; slug: string };
-  const index = collection.findIndex((item) => item.id === safeEntity.id);
+
+  const persisted: typeof safeEntity =
+    key === "roadmapMilestones" ? { ...safeEntity, slug: slugify(safeEntity.slug) } : safeEntity;
+
+  const index = collection.findIndex((item) => item.id === persisted.id);
 
   if (index >= 0) {
     const current = collection[index];
@@ -131,13 +135,13 @@ export async function saveCollectionEntity<T extends { id?: string; slug?: strin
     }
 
     collection[index] = {
-        ...safeEntity,
+        ...persisted,
       version: current.version + 1,
       updatedAt: new Date().toISOString()
     };
   } else {
     collection.unshift({
-      ...safeEntity,
+      ...persisted,
       version: 1,
       updatedAt: new Date().toISOString()
     });
@@ -147,9 +151,9 @@ export async function saveCollectionEntity<T extends { id?: string; slug?: strin
   store.activity = [
     createActivityEvent(
       key,
-      safeEntity.id,
+      persisted.id,
       index >= 0 ? "update" : "create",
-      `${index >= 0 ? "Updated" : "Created"} ${key} entry ${safeEntity.id}.`
+      `${index >= 0 ? "Updated" : "Created"} ${key} entry ${persisted.id}.`
     ),
     ...store.activity
   ].slice(0, 30);
