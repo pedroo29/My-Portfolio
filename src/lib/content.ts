@@ -2,6 +2,7 @@ import { defaultLocale } from "@/lib/constants";
 import {
   CERTIFICATIONS_PAGE_DEFAULTS,
   HOME_LOCALE_DEFAULTS,
+  mergeLocalizedContactContent,
   ROADMAP_PAGE_DEFAULTS,
   SKILLS_PAGE_DEFAULTS
 } from "@/lib/content-defaults";
@@ -14,6 +15,7 @@ import type {
   Lab,
   Locale,
   LocalizedCertificationsPageContent,
+  LocalizedContactContent,
   LocalizedHomeContent,
   LocalizedRoadmapPageContent,
   LocalizedSkillsPageContent,
@@ -111,6 +113,8 @@ export async function getAboutContent(locale: Locale) {
 
 export async function getContactContent(locale: Locale) {
   const store = await readStore();
+  const raw = pickLocalized(store.contact.locales, locale) as Partial<LocalizedContactContent>;
+  const content = mergeLocalizedContactContent(locale, raw);
   return {
     channels: {
       email: store.contact.email,
@@ -118,7 +122,7 @@ export async function getContactContent(locale: Locale) {
       github: store.contact.github,
       availability: store.contact.availability
     },
-    content: pickLocalized(store.contact.locales, locale)
+    content
   };
 }
 

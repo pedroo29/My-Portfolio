@@ -1,7 +1,9 @@
 import type {
+  AvailabilityStatus,
   ContentStore,
   Locale,
   LocalizedCertificationsPageContent,
+  LocalizedContactContent,
   LocalizedHomeContent,
   LocalizedRoadmapPageContent,
   LocalizedSkillsPageContent
@@ -223,6 +225,97 @@ export const CERTIFICATIONS_PAGE_DEFAULTS: Record<Locale, LocalizedCertification
   }
 };
 
+/** Valores por defecto (i18n) para textos de contacto si el store tiene campos vacíos. */
+export const CONTACT_LOCALE_DEFAULTS: Record<Locale, LocalizedContactContent> = {
+  en: {
+    headline: "Contact",
+    intro:
+      "Whether you are hiring, collaborating, or want a technical deep dive — I respond with context and clear next steps.",
+    location: "",
+    responseTime: "Within 24–48 hours on business days",
+    preferredChannel: "Email",
+    primaryCtaLabel: "Contact"
+  },
+  de: {
+    headline: "Kontakt",
+    intro:
+      "Ob du eine Rolle besetzt, zusammenarbeiten willst oder einen technischen Deep Dive brauchst — ich antworte mit Kontext und klaren nächsten Schritten.",
+    location: "",
+    responseTime: "Innerhalb von 24–48 Stunden an Werktagen",
+    preferredChannel: "E-Mail",
+    primaryCtaLabel: "Kontakt"
+  }
+};
+
+export type ContactPageUiLabels = {
+  eyebrow: string;
+  emailLabel: string;
+  linkedinLabel: string;
+  githubLabel: string;
+  availabilityLabel: string;
+  contextHeading: string;
+  locationLabel: string;
+  responseTimeLabel: string;
+  preferredChannelLabel: string;
+};
+
+export const CONTACT_PAGE_UI: Record<Locale, ContactPageUiLabels> = {
+  en: {
+    eyebrow: "Contact",
+    emailLabel: "Email",
+    linkedinLabel: "LinkedIn",
+    githubLabel: "GitHub",
+    availabilityLabel: "Availability",
+    contextHeading: "Context",
+    locationLabel: "Location",
+    responseTimeLabel: "Expected response time",
+    preferredChannelLabel: "Preferred channel"
+  },
+  de: {
+    eyebrow: "Kontakt",
+    emailLabel: "E-Mail",
+    linkedinLabel: "LinkedIn",
+    githubLabel: "GitHub",
+    availabilityLabel: "Verfügbarkeit",
+    contextHeading: "Kontext",
+    locationLabel: "Standort",
+    responseTimeLabel: "Erwartete Antwortzeit",
+    preferredChannelLabel: "Bevorzugter Kanal"
+  }
+};
+
+export const AVAILABILITY_LABELS_LOCALE: Record<Locale, Record<AvailabilityStatus, string>> = {
+  en: {
+    open: "Open to opportunities",
+    selective: "Selective opportunities",
+    unavailable: "Unavailable"
+  },
+  de: {
+    open: "Offen für neue Möglichkeiten",
+    selective: "Selektive Möglichkeiten",
+    unavailable: "Nicht verfügbar"
+  }
+};
+
+export function mergeLocalizedContactContent(
+  locale: Locale,
+  fromStore: Partial<LocalizedContactContent>
+): LocalizedContactContent {
+  const defaults = CONTACT_LOCALE_DEFAULTS[locale];
+  const out = { ...defaults };
+  (Object.keys(defaults) as (keyof LocalizedContactContent)[]).forEach((key) => {
+    const v = fromStore[key];
+    if (typeof v === "string" && v.trim() !== "") {
+      out[key] = v;
+    }
+  });
+  return out;
+}
+
+export function formatAvailabilityLabel(locale: Locale, status: AvailabilityStatus): string {
+  return AVAILABILITY_LABELS_LOCALE[locale][status];
+}
+
 /**
  * Store vacío para el primer arranque sin `data/runtime/store.json`.
  * No incluye datos de demo: catálogos y colecciones en cero; textos globales = defaults + placeholders editables en admin.
@@ -314,22 +407,8 @@ export function buildBootstrapContentStore(): ContentStore {
       github: "",
       availability: "selective",
       locales: {
-        en: {
-          headline: "Contact",
-          intro: "Add your channels in the admin under Content → Contact.",
-          location: "",
-          responseTime: "",
-          preferredChannel: "",
-          primaryCtaLabel: "Contact"
-        },
-        de: {
-          headline: "Kontakt",
-          intro: "Trage deine Kanäle im Admin unter Content → Contact ein.",
-          location: "",
-          responseTime: "",
-          preferredChannel: "",
-          primaryCtaLabel: "Kontakt"
-        }
+        en: CONTACT_LOCALE_DEFAULTS.en,
+        de: CONTACT_LOCALE_DEFAULTS.de
       }
     },
     privacy: {

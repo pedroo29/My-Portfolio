@@ -550,6 +550,50 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
                       );
                     }
 
+                    if (field.type === "date" && field.allowEmpty) {
+                      const dateStr = String(value ?? "").trim();
+                      const isEmpty = !dateStr;
+
+                      return (
+                        <div
+                          key={fieldKey}
+                          className={cn(
+                            "space-y-3 rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3",
+                            field.fullWidth && "md:col-span-2"
+                          )}
+                        >
+                          <div className="space-y-1">
+                            <span className="text-sm font-medium text-slate-200">{field.label}</span>
+                            {field.description ? <p className="text-xs text-slate-500">{field.description}</p> : null}
+                          </div>
+                          <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-200">
+                            <input
+                              type="checkbox"
+                              checked={isEmpty}
+                              onChange={(event) => {
+                                if (event.target.checked) {
+                                  setDraft((current) => setNestedValue(current, field.path, ""));
+                                } else {
+                                  const today = new Date().toISOString().slice(0, 10);
+                                  setDraft((current) => setNestedValue(current, field.path, today));
+                                }
+                              }}
+                              className="focus-ring rounded border-slate-600"
+                            />
+                            <span>Not set</span>
+                          </label>
+                          {!isEmpty ? (
+                            <input
+                              type="date"
+                              value={dateStr}
+                              onChange={(event) => setDraft((current) => setNestedValue(current, field.path, event.target.value))}
+                              className="focus-ring w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100"
+                            />
+                          ) : null}
+                        </div>
+                      );
+                    }
+
                     return (
                       <label
                         key={fieldKey}

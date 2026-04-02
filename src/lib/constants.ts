@@ -1,4 +1,4 @@
-import type { AvailabilityStatus, CertificationState, LabLevel, LabState, Locale, MilestoneState, PhaseState, Priority } from "@/lib/types";
+import type { CertificationState, LabLevel, LabState, Locale, MilestoneState, PhaseState, Priority } from "@/lib/types";
 
 export const defaultLocale: Locale = "en";
 
@@ -188,12 +188,6 @@ export const publicationStatusLabels = {
   published: "Published",
   archived: "Archived"
 } as const;
-
-export const availabilityLabels: Record<AvailabilityStatus, string> = {
-  open: "Open to opportunities",
-  selective: "Selective opportunities",
-  unavailable: "Unavailable"
-};
 
 export const labLevelLabels: Record<LabLevel, string> = {
   foundational: "Foundational",

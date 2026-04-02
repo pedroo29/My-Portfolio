@@ -5,14 +5,19 @@ export function cn(...tokens: Array<string | false | null | undefined>) {
   return tokens.filter(Boolean).join(" ");
 }
 
-export function formatDate(value?: string) {
-  if (!value) return "Not set";
+export function formatDate(
+  value?: string,
+  options?: { emptyLabel?: string; localeTag?: string }
+) {
+  const trimmed = value?.trim();
+  if (!trimmed) return options?.emptyLabel ?? "Not set";
 
-  return new Intl.DateTimeFormat("en", {
+  const localeTag = options?.localeTag ?? "en";
+  return new Intl.DateTimeFormat(localeTag, {
     year: "numeric",
     month: "short",
     day: "numeric"
-  }).format(new Date(value));
+  }).format(new Date(trimmed));
 }
 
 export function slugify(input: string) {

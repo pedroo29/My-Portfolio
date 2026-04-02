@@ -120,7 +120,8 @@ export interface RoadmapMilestone extends BaseEntity {
   order?: number;
   phaseId: string;
   state: MilestoneState;
-  startDate: string;
+  /** Vacío o ausente si la fecha de inicio aún no está fijada. */
+  startDate?: string;
   endDate?: string;
   estimatedEffort?: string;
   priority?: Priority;

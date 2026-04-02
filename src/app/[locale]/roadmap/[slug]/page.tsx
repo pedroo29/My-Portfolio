@@ -106,11 +106,21 @@ export default async function RoadmapMilestonePage({
           <div className="grid gap-4 md:grid-cols-3">
             <Panel className="space-y-2 border border-cyan-500/20 bg-slate-950/70 shadow-inner shadow-slate-950/40">
               <p className="text-xs uppercase tracking-[0.24em] text-cyan-300/80">{labels.metaStart}</p>
-              <p className="text-sm font-medium text-slate-100">{formatDate(milestone.startDate)}</p>
+              <p className="text-sm font-medium text-slate-100">
+                {formatDate(milestone.startDate, {
+                  emptyLabel: labels.notSet,
+                  localeTag: typedLocale === "de" ? "de" : "en"
+                })}
+              </p>
             </Panel>
             <Panel className="space-y-2 border border-cyan-500/20 bg-slate-950/70 shadow-inner shadow-slate-950/40">
               <p className="text-xs uppercase tracking-[0.24em] text-cyan-300/80">{labels.metaEnd}</p>
-              <p className="text-sm font-medium text-slate-100">{formatDate(milestone.endDate)}</p>
+              <p className="text-sm font-medium text-slate-100">
+                {formatDate(milestone.endDate, {
+                  emptyLabel: labels.notSet,
+                  localeTag: typedLocale === "de" ? "de" : "en"
+                })}
+              </p>
             </Panel>
             <Panel className="space-y-2 border border-fuchsia-400/25 bg-slate-950/70 shadow-inner shadow-slate-950/40">
               <p className="text-xs uppercase tracking-[0.24em] text-fuchsia-200/80">{labels.metaEffort}</p>

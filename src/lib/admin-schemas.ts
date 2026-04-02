@@ -31,6 +31,8 @@ export interface AdminField {
   fullWidth?: boolean;
   /** Solo `markdown`: UI compacta (labs — documentación + medios rápidos). */
   markdownUi?: "documentation";
+  /** Solo `date`: permite vaciar la fecha (p. ej. hitos planificados sin día concreto). */
+  allowEmpty?: boolean;
 }
 
 export interface AdminSection {
@@ -339,8 +341,20 @@ export const collectionSchemas: Record<CollectionKey, CollectionSchema> = {
             ]
           },
           { label: "Priority", path: "priority", type: "select", options: [{ value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }] },
-          { label: "Start date", path: "startDate", type: "date" },
-          { label: "End date", path: "endDate", type: "date" },
+          {
+            label: "Start date",
+            path: "startDate",
+            type: "date",
+            allowEmpty: true,
+            description: "Leave as “Not set” when the start day is still unknown; you can set a date later."
+          },
+          {
+            label: "End date",
+            path: "endDate",
+            type: "date",
+            allowEmpty: true,
+            description: "Leave as “Not set” when the end day is still unknown; you can set a date later."
+          },
           { label: "Estimated effort", path: "estimatedEffort", type: "text" }
         ]
       },
@@ -952,7 +966,7 @@ export function createBlankEntity(key: CollectionKey) {
       phaseId: "",
       order: 1,
       state: "planned",
-      startDate: timestamp.slice(0, 10),
+      startDate: "",
       endDate: "",
       estimatedEffort: "",
       priority: "medium",

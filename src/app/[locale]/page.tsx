@@ -1,7 +1,7 @@
 import { CarouselSlide, HorizontalCarousel } from "@/components/horizontal-carousel";
 import { CTAButton, EmptyState, Section } from "@/components/ui";
 import { LabCard, MilestoneCard, SkillCard } from "@/components/public-cards";
-import { availabilityLabels } from "@/lib/constants";
+import { formatAvailabilityLabel } from "@/lib/content-defaults";
 import {
   formatHomeAvailabilityLine,
   getCatalogs,
@@ -134,7 +134,7 @@ export default async function HomePage({
               <p className="text-sm leading-relaxed text-slate-400">
                 {formatHomeAvailabilityLine(
                   home.availabilityLineTemplate,
-                  availabilityLabels[contact.channels.availability],
+                  formatAvailabilityLabel(typedLocale, contact.channels.availability),
                   contact.content.preferredChannel
                 )}
               </p>
