@@ -17,6 +17,8 @@ import {
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 /** Vista previa en home: skills con mayor progreso (señal más fuerte). */
 const HOME_SKILLS_PREVIEW = 4;
 

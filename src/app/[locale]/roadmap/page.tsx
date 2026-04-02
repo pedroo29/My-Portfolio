@@ -4,6 +4,8 @@ import { Section } from "@/components/ui";
 import { getRoadmap, getRoadmapPageContent } from "@/lib/content";
 import type { Locale } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function RoadmapPage({
   params
 }: {

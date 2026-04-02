@@ -2,6 +2,8 @@ import { Panel, Section } from "@/components/ui";
 import { getPrivacyContent } from "@/lib/content";
 import type { Locale } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function PrivacyPage({
   params
 }: {

@@ -3,6 +3,8 @@ import { Section } from "@/components/ui";
 import { getCatalogs, getSkills, getSkillsPageContent } from "@/lib/content";
 import type { Locale } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function SkillsPage({
   params,
   searchParams

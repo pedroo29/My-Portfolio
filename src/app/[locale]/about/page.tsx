@@ -2,6 +2,8 @@ import { Panel, Section } from "@/components/ui";
 import { getAboutContent } from "@/lib/content";
 import type { Locale } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 function PillList({ items }: { items: string[] }) {
   return (
     <div className="flex flex-wrap gap-2">

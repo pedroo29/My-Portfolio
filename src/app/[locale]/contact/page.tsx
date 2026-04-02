@@ -3,6 +3,8 @@ import { availabilityLabels } from "@/lib/constants";
 import { getContactContent } from "@/lib/content";
 import type { Locale } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function ContactPage({
   params
 }: {
