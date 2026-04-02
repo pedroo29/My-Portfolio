@@ -2,9 +2,22 @@ import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { extractMarkdownHeadings, slugifyHeading } from "@/lib/markdown-headings";
+import { EmbedImageFigure, EmbedVideoFigure, MarkdownRawImage } from "@/components/markdown/markdown-image-fallback";
+import { groupHeadingIdsByMediaSegments, slugifyHeading } from "@/lib/markdown-headings";
 import type { Locale, MediaAsset } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+function resolveVisibleCaption(
+  captionOverride: string | undefined,
+  asset: MediaAsset,
+  locale: Locale
+): string | undefined {
+  const fromToken = captionOverride?.trim();
+  if (fromToken) return fromToken;
+  const localized = asset.caption[locale]?.trim();
+  if (localized) return localized;
+  return undefined;
+}
 
 interface MarkdownRendererProps {
   content: string;
@@ -30,33 +43,28 @@ function MediaEmbed({
     );
   }
 
-  const caption = captionOverride || asset.caption[locale] || asset.fileName;
+  const visibleCaption = resolveVisibleCaption(captionOverride, asset, locale);
 
   if (asset.mimeType.startsWith("video/")) {
-    return (
-      <figure className="my-6 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
-        <video src={asset.url} controls className="w-full rounded-t-2xl" />
-        <figcaption className="px-4 py-3 text-sm text-slate-400">{caption}</figcaption>
-      </figure>
-    );
+    return <EmbedVideoFigure src={asset.url} caption={visibleCaption} />;
   }
 
   if (asset.mimeType.startsWith("image/")) {
     return (
-      <figure className="my-6 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={asset.url} alt={asset.alt[locale] || asset.fileName} className="w-full rounded-t-2xl object-cover" />
-        <figcaption className="px-4 py-3 text-sm text-slate-400">{caption}</figcaption>
-      </figure>
+      <EmbedImageFigure
+        src={asset.url}
+        alt={asset.alt[locale]?.trim() || asset.fileName}
+        caption={visibleCaption}
+      />
     );
   }
 
   return (
     <figure className="my-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
-      <a href={asset.url} target="_blank" className="text-sm font-medium text-cyan-200 hover:text-cyan-100">
+      <a href={asset.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-cyan-200 hover:text-cyan-100">
         Open media file
       </a>
-      <figcaption className="mt-3 text-sm text-slate-400">{caption}</figcaption>
+      {visibleCaption ? <figcaption className="mt-3 text-sm text-slate-400">{visibleCaption}</figcaption> : null}
     </figure>
   );
 }
@@ -64,16 +72,17 @@ function MediaEmbed({
 function MarkdownChunk({
   content,
   className,
-  getNextHeadingId
+  headingIds
 }: {
   content: string;
   className?: string;
-  getNextHeadingId: () => string | undefined;
+  headingIds: string[];
 }) {
   if (!content.trim()) {
     return null;
   }
 
+  let headingIndex = 0;
   const readNodeText = (node: ReactNode): string => {
     if (typeof node === "string" || typeof node === "number") return String(node);
     if (Array.isArray(node)) return node.map(readNodeText).join("");
@@ -84,7 +93,8 @@ function MarkdownChunk({
   };
 
   const resolveHeadingId = (children: ReactNode) => {
-    const candidate = getNextHeadingId();
+    const candidate = headingIds[headingIndex];
+    headingIndex += 1;
     if (candidate) return candidate;
     return slugifyHeading(readNodeText(children)) || "section";
   };
@@ -150,11 +160,7 @@ function MarkdownChunk({
           th: ({ children }) => <th className="border-b border-slate-800 px-4 py-3 font-medium">{children}</th>,
           td: ({ children }) => <td className="border-b border-slate-800 px-4 py-3 align-top">{children}</td>,
           img: ({ src, alt }) => (
-            <span className="my-6 block overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src || ""} alt={alt || ""} className="w-full object-cover" />
-              {alt ? <span className="block px-4 py-3 text-sm text-slate-400">{alt}</span> : null}
-            </span>
+            <MarkdownRawImage src={typeof src === "string" ? src : ""} alt={typeof alt === "string" ? alt : ""} />
           )
         }}
       >
@@ -183,9 +189,8 @@ export function MarkdownRenderer({
   mediaAssets = [],
   className
 }: MarkdownRendererProps) {
-  const headingIds = extractMarkdownHeadings(content, 4).map((item) => item.id);
-  let headingCursor = 0;
   const segments = content.split(/(\{\{media:[^}]+\}\})/g);
+  const headingIdsBySegment = groupHeadingIdsByMediaSegments(content, 4);
 
   return (
     <div className={cn("prose-copy", className)}>
@@ -207,11 +212,7 @@ export function MarkdownRenderer({
           <MarkdownChunk
             key={`markdown-${index}`}
             content={segment}
-            getNextHeadingId={() => {
-              const id = headingIds[headingCursor];
-              headingCursor += 1;
-              return id;
-            }}
+            headingIds={headingIdsBySegment[index] ?? []}
           />
         );
       })}

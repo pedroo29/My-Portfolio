@@ -2,9 +2,8 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 
-import { roadmapMinimapLabels, roadmapVisualLabels } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import type { Locale } from "@/lib/types";
+import type { LocalizedRoadmapPageContent } from "@/lib/types";
 
 export type RoadmapMinimapPhase = {
   slug: string;
@@ -41,10 +40,15 @@ function scrollToPhase(slug: string) {
   el?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-export function RoadmapPhaseMinimap({ locale, phases }: { locale: Locale; phases: RoadmapMinimapPhase[] }) {
+export function RoadmapPhaseMinimap({
+  phases,
+  roadmapCopy
+}: {
+  phases: RoadmapMinimapPhase[];
+  roadmapCopy: LocalizedRoadmapPageContent;
+}) {
   const [open, setOpen] = useState(false);
-  const labels = roadmapMinimapLabels[locale];
-  const phaseWord = roadmapVisualLabels[locale].phaseLabel;
+  const phaseWord = roadmapCopy.phaseLabel;
   const shellRef = useRef<HTMLDivElement | null>(null);
 
   if (phases.length === 0) return null;
@@ -77,7 +81,7 @@ export function RoadmapPhaseMinimap({ locale, phases }: { locale: Locale; phases
           id="roadmap-phase-minimap-panel"
           className="reveal-up w-full overflow-hidden rounded-2xl border border-slate-700/90 bg-slate-950/95 shadow-2xl shadow-slate-950/60 backdrop-blur-md transition-all duration-300 ease-out"
           role="dialog"
-          aria-label={labels.title}
+          aria-label={roadmapCopy.minimapTitle}
         >
           <div className="relative border-b border-slate-800/90 px-4 py-3">
             <div
@@ -90,18 +94,18 @@ export function RoadmapPhaseMinimap({ locale, phases }: { locale: Locale; phases
               aria-hidden
             />
             <div className="relative flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-slate-100">{labels.title}</h2>
+              <h2 className="text-sm font-semibold text-slate-100">{roadmapCopy.minimapTitle}</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="focus-ring cursor-pointer rounded-lg border border-slate-700 px-2.5 py-1 text-xs text-slate-300 hover:border-slate-600 hover:text-slate-100"
               >
-                {labels.close}
+                {roadmapCopy.minimapClose}
               </button>
             </div>
           </div>
 
-          <nav aria-label={labels.ariaNav} className="max-h-[min(55vh,22rem)] overflow-auto p-4">
+          <nav aria-label={roadmapCopy.minimapAriaNav} className="max-h-[min(55vh,22rem)] overflow-auto p-4">
             {/* Desktop: camino horizontal */}
             <div className="hidden flex-wrap items-center justify-center gap-y-4 md:flex">
               {phases.map((phase, index) => {
@@ -213,7 +217,7 @@ export function RoadmapPhaseMinimap({ locale, phases }: { locale: Locale; phases
           <circle cx="14" cy="15" r="1.5" />
           <circle cx="20" cy="7" r="1.5" />
         </svg>
-        {labels.button}
+        {roadmapCopy.minimapButton}
       </button>
     </div>
   );

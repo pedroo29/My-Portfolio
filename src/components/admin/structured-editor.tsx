@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { MultiSelectPickerField } from "@/components/admin/multi-select-picker";
 import { MarkdownRenderer } from "@/components/markdown/markdown-renderer";
@@ -83,6 +83,12 @@ function inferLocaleFromPath(path: string) {
   return path.includes(".de.") ? "de" : "en";
 }
 
+function readLabMediaIds(draft: unknown): string[] | undefined {
+  if (!draft || typeof draft !== "object") return undefined;
+  const ids = (draft as Record<string, unknown>).mediaIds;
+  return Array.isArray(ids) && ids.every((item) => typeof item === "string") ? (ids as string[]) : undefined;
+}
+
 export function StructuredEditor<T extends { id?: string; version?: number }>({
   title,
   description,
@@ -110,6 +116,8 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const rootRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
   const [draft, setDraft] = useState<T>(initialValue);
@@ -130,6 +138,20 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
   useEffect(() => {
     window.localStorage.setItem(storageKey, mode);
   }, [mode, storageKey]);
+
+  useEffect(() => {
+    if (searchParams.get("saved") !== "1") return;
+    setMessage({ tone: "success", text: "Item created and saved successfully." });
+    router.replace(pathname, { scroll: false });
+  }, [searchParams, pathname, router]);
+
+  useEffect(() => {
+    if (!message) return;
+    const id = requestAnimationFrame(() => {
+      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [message]);
 
   useEffect(() => {
     const beforeUnload = (event: BeforeUnloadEvent) => {
@@ -211,7 +233,8 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
 
     if (/\/new\/?$/.test(pathname) && savedData.id) {
       const nextId = encodeURIComponent(String(savedData.id));
-      router.replace(pathname.replace(/\/new\/?$/, `/${nextId}`));
+      const nextPath = pathname.replace(/\/new\/?$/, `/${nextId}`);
+      router.replace(`${nextPath}?saved=1`, { scroll: false });
     } else {
       router.refresh();
     }
@@ -252,7 +275,22 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={rootRef} className="space-y-6 scroll-mt-6">
+      {message ? (
+        <div
+          role={message.tone === "danger" ? "alert" : "status"}
+          aria-live={message.tone === "danger" ? "assertive" : "polite"}
+          className={cn(
+            "rounded-2xl border px-4 py-3 text-sm",
+            message.tone === "success" && "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
+            message.tone === "warning" && "border-amber-400/20 bg-amber-400/10 text-amber-100",
+            message.tone === "danger" && "border-rose-400/20 bg-rose-400/10 text-rose-100"
+          )}
+        >
+          {message.text}
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-950/50 p-6 md:flex-row md:items-start md:justify-between">
         <div className="space-y-2">
           <a href={backHref} className="focus-ring inline-flex text-sm text-cyan-200 hover:text-cyan-100">
@@ -287,19 +325,6 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
         </div>
       </div>
 
-      {message ? (
-        <div
-          className={cn(
-            "rounded-2xl border px-4 py-3 text-sm",
-            message.tone === "success" && "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
-            message.tone === "warning" && "border-amber-400/20 bg-amber-400/10 text-amber-100",
-            message.tone === "danger" && "border-rose-400/20 bg-rose-400/10 text-rose-100"
-          )}
-        >
-          {message.text}
-        </div>
-      ) : null}
-
       <form
         ref={formRef}
         className="space-y-6"
@@ -323,7 +348,15 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
         {mode === "preview" ? (
           <div className="grid gap-6 lg:grid-cols-2">
             {sections.map((section) => (
-              <div key={section.title} className="rounded-3xl border border-slate-800 bg-slate-950/50 p-6">
+              <div
+                key={section.title}
+                className={cn(
+                  "rounded-3xl border p-6",
+                  section.emphasis === "primary"
+                    ? "border-cyan-400/40 bg-gradient-to-br from-cyan-950/30 via-slate-950/60 to-slate-950"
+                    : "border-slate-800 bg-slate-950/50"
+                )}
+              >
                 <div className="mb-4 space-y-1">
                   <h2 className="text-lg font-semibold text-slate-50">{section.title}</h2>
                   {section.description ? <p className="text-sm text-slate-400">{section.description}</p> : null}
@@ -352,27 +385,52 @@ export function StructuredEditor<T extends { id?: string; version?: number }>({
         {mode === "form" ? (
           <div className="space-y-6">
             {sections.map((section) => (
-              <div key={section.title} className="rounded-3xl border border-slate-800 bg-slate-950/50 p-6">
+              <div
+                key={section.title}
+                className={cn(
+                  "rounded-3xl border p-6",
+                  section.emphasis === "primary"
+                    ? "border-cyan-400/40 bg-gradient-to-br from-cyan-950/30 via-slate-950/60 to-slate-950 shadow-[0_0_48px_-16px_rgba(34,211,238,0.18)]"
+                    : "border-slate-800 bg-slate-950/50"
+                )}
+              >
                 <div className="mb-5 space-y-1">
                   <h2 className="text-lg font-semibold text-slate-50">{section.title}</h2>
                   {section.description ? <p className="text-sm text-slate-400">{section.description}</p> : null}
                 </div>
-                <div className="grid gap-5 md:grid-cols-2">
+                <div
+                  className={cn(
+                    "grid gap-5",
+                    section.columnLayout === "single" ? "grid-cols-1" : "md:grid-cols-2"
+                  )}
+                >
                   {section.fields.map((field) => {
                     const fieldKey = `${section.title}::${field.path}`;
                     const value = getNestedValue(draft, field.path);
                     const options = field.options ?? (field.optionsKey ? optionsMap[field.optionsKey] : undefined) ?? [];
+                    const labMediaIds = readLabMediaIds(draft);
 
                     if (field.type === "markdown") {
                       return (
-                        <MarkdownField
+                        <div
                           key={fieldKey}
-                          label={field.label}
-                          value={String(value ?? "")}
-                          locale={inferLocaleFromPath(field.path)}
-                          mediaAssets={mediaAssets}
-                          onChange={(nextValue) => setDraft((current) => setNestedValue(current, field.path, nextValue))}
-                        />
+                          className={cn(section.columnLayout !== "single" && field.fullWidth && "md:col-span-2")}
+                        >
+                          <MarkdownField
+                            label={field.label}
+                            value={String(value ?? "")}
+                            locale={inferLocaleFromPath(field.path)}
+                            mediaAssets={mediaAssets}
+                            markdownUi={field.markdownUi}
+                            labMediaIds={labMediaIds}
+                            onLabMediaIdsChange={
+                              labMediaIds !== undefined
+                                ? (ids) => setDraft((current) => setNestedValue(current, "mediaIds", ids))
+                                : undefined
+                            }
+                            onChange={(nextValue) => setDraft((current) => setNestedValue(current, field.path, nextValue))}
+                          />
+                        </div>
                       );
                     }
 

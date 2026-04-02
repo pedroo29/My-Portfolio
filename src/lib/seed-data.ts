@@ -1,3 +1,7 @@
+/**
+ * Dataset de demostración / stress-test (miles de líneas). No lo importa el servidor en producción.
+ * Uso: `npm run seed:store` escribe `data/runtime/store.json`. Para datos reales, restaura tu copia de `data/`.
+ */
 import type {
   Certification,
   CertificationState,
@@ -15,13 +19,13 @@ import type {
 
 const now = new Date().toISOString();
 
-/** Seed inicial vacío: catálogos + textos globales; el contenido se crea vía admin. */
-const SKILL_COUNT = 0;
-const LAB_COUNT = 0;
-const CERT_COUNT = 0;
-const PHASE_COUNT = 0;
-const MILESTONE_COUNT = 0;
-const MEDIA_COUNT = 0;
+/** Superpoblación para stress-test (UI, markdown, filtros). Restaurar: copia previa de `data/runtime/`. */
+const SKILL_COUNT = 54;
+const LAB_COUNT = 48;
+const CERT_COUNT = 24;
+const PHASE_COUNT = 8;
+const MILESTONE_COUNT = 40;
+const MEDIA_COUNT = 16;
 
 const levels: LabLevel[] = ["foundational", "intermediate", "advanced"];
 const labStates: LabState[] = ["completed", "in-progress", "planned"];
@@ -42,6 +46,133 @@ function pad(n: number) {
 
 function ymd(year: number, month: number, day: number) {
   return `${year}-${pad(month)}-${pad(day)}`;
+}
+
+/** Documentación markdown extensa por lab (stress de TOC, renderer y lectura). */
+function buildExtensiveLabDocumentation(n: number, locale: "en" | "de"): string {
+  const focusIdx = n % 5;
+  const focusEn = ["platform reliability", "secure delivery", "data and observability", "developer experience", "cost-aware scaling"][focusIdx];
+  const focusDe = ["Plattform-Zuverlässigkeit", "sicheres Delivery", "Daten und Observability", "Developer Experience", "kostenbewusstes Skalieren"][focusIdx];
+
+  if (locale === "en") {
+    return [
+      `# Lab ${pad(n)} — ${focusEn}`,
+      "",
+      "## Executive summary",
+      `This case study documents scenario **${n}**: a hands-on engagement focused on **${focusEn}**. The work combined architecture decisions, incremental rollout, and measurable validation so stakeholders could trace impact from design through production behaviour.`,
+      "",
+      "## Problem statement",
+      `The organisation needed a repeatable way to ship changes without regressions in scenario ${n}. Constraints included limited change windows, mixed legacy dependencies, and the need for clear evidence that new controls actually reduced operational risk rather than only adding process.`,
+      "",
+      "## Scope and non-goals",
+      `- **In scope:** reference implementation, automation hooks, dashboards, and a concise operational runbook.`,
+      `- **Out of scope:** full organisational process redesign, vendor migrations, and long-term licensing negotiations.`,
+      "",
+      "## Context diagram (narrative)",
+      `Traffic flows through an edge layer into application services backed by persistent storage and async workers. For lab ${n}, we treated the edge as the primary enforcement point for authentication metadata and rate limits, while keeping domain logic isolated behind explicit contracts.`,
+      "",
+      "## Architecture decisions",
+      "### ADR-1: Contract-first interfaces",
+      `We defined stable JSON schemas for the public API surface and generated types for both server and client. This reduced drift between environments and made contract tests a first-class gate in CI.`,
+      "",
+      "### ADR-2: Progressive rollout",
+      `Feature flags guarded behavioural changes. We rolled out to an internal cohort, then a percentage of production traffic, with automatic rollback on error-budget burn.`,
+      "",
+      "## Implementation notes",
+      `The implementation emphasised small, reviewable changes. Each merge request included: migration plan (if any), observability deltas, and a rollback checklist. Below is a representative pattern used for guarded handlers:`,
+      "",
+      "```typescript",
+      "export async function withGuards<T>(ctx: RequestContext, run: () => Promise<T>): Promise<T> {",
+      "  await assertRateLimit(ctx);",
+      "  await assertAuth(ctx);",
+      "  return run();",
+      "}",
+      "```",
+      "",
+      "## Validation strategy",
+      `We combined synthetic probes, canary metrics, and structured logs. The table summarises signals monitored during the final rollout window for lab ${n}.`,
+      "",
+      "| Signal | Source | Threshold |",
+      "|--------|--------|-----------|",
+      "| p95 latency | Gateway | ≤ baseline + 15% |",
+      "| Error rate | App + edge | ≤ 0.5% |",
+      "| Saturation | Workers | ≤ 70% sustained |",
+      "",
+      "## Results",
+      `- Met reliability targets for the pilot window.`,
+      `- Reduced mean time to detect (MTTD) for the instrumented failure modes.`,
+      `- Documented residual risks and owners for the next quarter.`,
+      "",
+      "## Lessons learned",
+      `Automation without ownership decays quickly. Pairing dashboards with named on-call rotations and quarterly review of SLOs kept the system honest. For scenario ${n}, the biggest win was aligning product and platform language around the same success metrics.`,
+      "",
+      "## Next steps",
+      `Harden the runbook with playbooks for dependency failure, expand contract tests to cover edge cases discovered in staging, and schedule a follow-up review after the next major dependency upgrade.`,
+      "",
+      "## Appendix",
+      `- Evidence links and runbooks live alongside this lab entry.`,
+      `- Version: seed lab ${n} — generated for portfolio stress testing.`
+    ].join("\n");
+  }
+
+  return [
+    `# Lab ${pad(n)} — ${focusDe}`,
+    "",
+    "## Kurzfassung",
+    `Diese Fallstudie beschreibt Szenario **${n}** mit Schwerpunkt **${focusDe}**. Ziel war es, Architekturentscheidungen, schrittweises Rollout und messbare Validierung so zu dokumentieren, dass Wirkung von der Konzeption bis zum Produktionsverhalten nachvollziehbar bleibt.`,
+    "",
+    "## Problemstellung",
+    `Die Organisation brauchte einen wiederholbaren Weg, Änderungen in Szenario ${n} ohne Regressionen auszuliefern. Rahmenbedingungen: begrenzte Wartungsfenster, gemischte Legacy-Abhängigkeiten und der Bedarf an belastbaren Nachweisen, dass neue Kontrollen das Betriebsrisiko senken.`,
+    "",
+    "## Umfang und Nicht-Ziele",
+    `- **Im Umfang:** Referenzimplementierung, Automatisierung, Dashboards, kompaktes Runbook.`,
+    `- **Nicht im Umfang:** vollständige Prozessreorganisation, Vendor-Migrationen, langfristige Lizenzverhandlungen.`,
+    "",
+    "## Kontext (beschreibend)",
+    `Der Datenfluss läuft über eine Edge-Schicht zu Anwendungsdiensten mit Persistenz und asynchronen Workern. Für Lab ${n} setzten wir die Edge als primären Punkt für Authentifizierungsmetadaten und Rate-Limits ein, während Fachlogik hinter expliziten Schnittstellen gekapselt bleibt.`,
+    "",
+    "## Architekturentscheidungen",
+    "### ADR-1: Contract-first",
+    `Stabile JSON-Schemas für die öffentliche API und generierte Typen für Server und Client reduzierten Drift zwischen Umgebungen; Vertragstests wurden zum CI-Gate.`,
+    "",
+    "### ADR-2: Progressives Rollout",
+    `Feature-Flags schützten Verhaltensänderungen: interne Kohorte, dann Anteil am Produktivtraffic, mit automatischem Rollback bei Error-Budget-Verbrauch.`,
+    "",
+    "## Umsetzung",
+    `Kleine, reviewbare Änderungen; jedes Merge-Request enthielt Migrationsplan (falls nötig), Observability-Deltas und Rollback-Checkliste. Beispielmuster:`,
+    "",
+    "```typescript",
+    "export async function withGuards<T>(ctx: RequestContext, run: () => Promise<T>): Promise<T> {",
+    "  await assertRateLimit(ctx);",
+    "  await assertAuth(ctx);",
+    "  return run();",
+    "}",
+    "```",
+    "",
+    "## Validierung",
+    `Kombination aus synthetischen Probes, Canary-Metriken und strukturierten Logs. Übersicht für das finale Rollout-Fenster von Lab ${n}:`,
+    "",
+    "| Signal | Quelle | Schwellwert |",
+    "|--------|--------|-------------|",
+    "| p95 Latenz | Gateway | ≤ Basis + 15 % |",
+    "| Fehlerrate | App + Edge | ≤ 0,5 % |",
+    "| Auslastung | Worker | ≤ 70 % dauerhaft |",
+    "",
+    "## Ergebnisse",
+    `- Zuverlässigkeitsziele im Pilotfenster erreicht.`,
+    `- MTTD für instrumentierte Fehlerbilder verbessert.`,
+    `- Restrisiken und Verantwortliche fürs nächste Quartal dokumentiert.`,
+    "",
+    "## Learnings",
+    `Automatisierung ohne Ownership verfällt schnell. Dashboards mit klarer On-Call-Rotation und quartalsweiser SLO-Review hielten das System ehrlich. Der größte Gewinn in Szenario ${n}: gemeinsame Erfolgsmetriken für Produkt und Plattform.`,
+    "",
+    "## Nächste Schritte",
+    `Runbook um Playbooks für Abhängigkeitsausfälle erweitern, Vertragstests um Staging-Edge-Cases ergänzen, Review nach dem nächsten Major-Upgrade planen.`,
+    "",
+    "## Anhang",
+    `- Belege und Runbooks sind mit dem Lab-Eintrag verknüpft.`,
+    `- Version: Seed-Lab ${n} — generiert für Portfolio-Stresstests.`
+  ].join("\n");
 }
 
 const catalogs: ContentStore["catalogs"] = {
@@ -150,7 +281,7 @@ const labs: Lab[] = Array.from({ length: LAB_COUNT }, (_, i) => {
       en: {
         title: `Lab ${pad(n)} — Platform experiment`,
         summary: `Hands-on delivery scenario ${n} with architecture, execution and validation results.`,
-        documentation: `## Lab ${n}\n\nThis documentation describes scope, decisions, implementation and outcomes for scenario ${n}.`,
+        documentation: buildExtensiveLabDocumentation(n, "en"),
         objectives: [`Define scope ${n}`, `Ship implementation ${n}`, `Measure impact ${n}`],
         results: [`Deployed scenario ${n}`, `Observed baseline metrics ${n}`],
         lessonsLearned: [`Iteration ${n} improved clarity`, `Automation reduced friction in scenario ${n}`]
@@ -158,7 +289,7 @@ const labs: Lab[] = Array.from({ length: LAB_COUNT }, (_, i) => {
       de: {
         title: `Lab ${pad(n)} — Plattform-Experiment`,
         summary: `Praktisches Delivery-Szenario ${n} mit Architektur-, Umsetzungs- und Validierungsergebnissen.`,
-        documentation: `## Lab ${n}\n\nDiese Dokumentation beschreibt Umfang, Entscheidungen, Umsetzung und Ergebnisse für Szenario ${n}.`,
+        documentation: buildExtensiveLabDocumentation(n, "de"),
         objectives: [`Umfang ${n} definieren`, `Umsetzung ${n} liefern`, `Wirkung ${n} messen`],
         results: [`Szenario ${n} ausgerollt`, `Baseline-Metriken ${n} beobachtet`],
         lessonsLearned: [`Iteration ${n} verbesserte Klarheit`, `Automatisierung reduzierte Reibung in Szenario ${n}`]
@@ -295,34 +426,228 @@ export const seedContentStore: ContentStore = {
     updatedAt: now,
     locales: {
       en: {
-        heroTitle: "Pedro — Portfolio",
-        heroSubtitle: "Product engineering, platforms and delivery—documented with labs, skills and roadmap.",
+        heroTitle: "Pedro — High-volume demo portfolio",
+        heroSubtitle: "Massive seeded dataset to stress-test UI, markdown docs, filters and editorial workflows.",
         roleChip: "Product Engineer",
         locationChip: "Europe (remote-friendly)",
         availabilityChip: "Selective opportunities",
         primaryCtaLabel: "View labs",
         secondaryCtaLabel: "Contact",
         statsHeading: "At a glance",
+        statsSubtitle: "Professional signal, structured proof",
+        kpiLabsLabel: "Labs",
+        kpiCertificationsLabel: "Certifications",
+        kpiSkillsLabel: "Skills",
+        availabilityLineTemplate: "Availability: {{availability}}. Preferred contact: {{channel}}.",
         featuredLabsHeading: "Featured case studies",
+        featuredLabsDescription: "Evidence-led work that shows execution, context and what was learned.",
+        featuredLabsEmptyTitle: "No featured case studies yet",
+        featuredLabsEmptyDescription: "Mark labs as top case studies in the admin, or browse the full labs list.",
+        featuredLabsEmptyCta: "View all labs",
         skillsHeading: "Core skills",
+        skillsDescription:
+          "Preview of the strongest signals by progress — each skill links to labs as evidence. Open the full capability map for the complete matrix.",
+        skillsEmptyTitle: "No skills yet",
+        skillsEmptyDescription: "Add skills in the admin panel.",
+        skillsEmptyCta: "View skills",
+        skillsViewAll: "View all skills",
         roadmapHeading: "Roadmap",
+        roadmapDescription: "A visible trajectory that connects learning, delivery and formal validation.",
+        roadmapViewFull: "Full roadmap",
+        roadmapCurrentFocusLabel: "Current focus",
+        roadmapEmptyTitle: "No active milestone",
+        roadmapEmptyDescription:
+          "There is no active milestone in any phase right now. Open the roadmap for the full timeline.",
         closingHeading: "Build reliable systems",
-        closingText: "Populate labs, skills and roadmap from the admin to bring this site to life."
+        closingText: "This dataset is intentionally dense so labs, skills and roadmap views can be validated under heavy content volume.",
+        carouselLabsRegion: "Featured case studies carousel",
+        carouselLabsPrev: "Previous case studies",
+        carouselLabsNext: "Next case studies"
       },
       de: {
-        heroTitle: "Pedro — Portfolio",
-        heroSubtitle: "Product Engineering, Plattformen und Delivery—dokumentiert mit Labs, Skills und Roadmap.",
+        heroTitle: "Pedro — High-Volume-Demo-Portfolio",
+        heroSubtitle: "Massiver Seed-Datensatz zum Stresstest von UI, Markdown-Dokumentation, Filtern und Redaktions-Workflows.",
         roleChip: "Product Engineer",
         locationChip: "Europa (remote-freundlich)",
         availabilityChip: "Selektive Möglichkeiten",
         primaryCtaLabel: "Labs ansehen",
         secondaryCtaLabel: "Kontakt",
         statsHeading: "Auf einen Blick",
+        statsSubtitle: "Profisignal, strukturierte Belege",
+        kpiLabsLabel: "Labs",
+        kpiCertificationsLabel: "Zertifizierungen",
+        kpiSkillsLabel: "Skills",
+        availabilityLineTemplate: "Verfügbarkeit: {{availability}}. Bevorzugter Kontakt: {{channel}}.",
         featuredLabsHeading: "Ausgewählte Case Studies",
+        featuredLabsDescription: "Evidenzbasierte Arbeit mit Kontext, Umsetzung und Learnings.",
+        featuredLabsEmptyTitle: "Keine hervorgehobenen Case Studies",
+        featuredLabsEmptyDescription:
+          "Markiere Labs als Top Case Study im Admin oder besuche die vollständige Labs-Übersicht.",
+        featuredLabsEmptyCta: "Alle Labs",
         skillsHeading: "Kernkompetenzen",
+        skillsDescription:
+          "Vorschau der stärksten Signale nach Fortschritt — jede Skill verweist auf Labs als Beleg. Die vollständige Matrix findest du unter Skills.",
+        skillsEmptyTitle: "Noch keine Skills",
+        skillsEmptyDescription: "Skills im Admin anlegen.",
+        skillsEmptyCta: "Zu Skills",
+        skillsViewAll: "Alle Skills",
         roadmapHeading: "Roadmap",
+        roadmapDescription: "Ein sichtbarer Pfad aus Lernen, Delivery und formaler Validierung.",
+        roadmapViewFull: "Vollständige Roadmap",
+        roadmapCurrentFocusLabel: "Aktueller Fokus",
+        roadmapEmptyTitle: "Kein aktiver Meilenstein",
+        roadmapEmptyDescription:
+          "Aktuell gibt es keinen aktiven Meilenstein in einer Phase. Unter Roadmap siehst du die vollständige Übersicht.",
         closingHeading: "Zuverlässige Systeme bauen",
-        closingText: "Fülle Labs, Skills und Roadmap im Admin, um diese Seite mit Inhalten zu befüllen."
+        closingText: "Dieser Datensatz ist bewusst dicht, damit Labs-, Skills- und Roadmap-Ansichten unter hoher Content-Last geprüft werden können.",
+        carouselLabsRegion: "Karussell mit ausgewählten Case Studies",
+        carouselLabsPrev: "Vorherige Case Studies",
+        carouselLabsNext: "Weitere Case Studies"
+      }
+    }
+  },
+  skillsPage: {
+    id: "skillsPage",
+    version: 1,
+    updatedAt: now,
+    locales: {
+      en: {
+        eyebrow: "Capability map",
+        title: "Skills backed by visible evidence",
+        description:
+          "A traceable matrix by depth level: progress reflects practice, and each skill links to labs that prove it.",
+        matrixTitle: "Depth matrix",
+        matrixSubtitle: "Grouped by level; color intensity reflects self-assessed progress.",
+        filterAll: "All",
+        filterByTag: "Filter by tag",
+        viewMatrix: "Matrix",
+        viewList: "List",
+        labsLinkedOne: "1 lab linked",
+        labsLinkedMany: "{{n}} labs linked",
+        openSkill: "Open skill",
+        bentoTitle: "Skill cards",
+        bentoSubtitle: "Larger tiles highlight the strongest signals; everything links to evidence.",
+        featured: "Top signal",
+        emptyFiltered: "No skills match this filter.",
+        emptyPublished: "No skills published yet."
+      },
+      de: {
+        eyebrow: "Kompetenzlandkarte",
+        title: "Skills mit nachvollziehbaren Belegen",
+        description:
+          "Eine nachvollziehbare Matrix nach Tiefe: Fortschritt spiegelt Praxis wider, jede Skill verweist auf Labs als Nachweis.",
+        matrixTitle: "Tiefen-Matrix",
+        matrixSubtitle: "Gruppiert nach Level; die Farbintensität spiegelt den Selbsteinschätzungs-Fortschritt wider.",
+        filterAll: "Alle",
+        filterByTag: "Nach Tag filtern",
+        viewMatrix: "Matrix",
+        viewList: "Liste",
+        labsLinkedOne: "1 verknüpftes Lab",
+        labsLinkedMany: "{{n}} verknüpfte Labs",
+        openSkill: "Skill öffnen",
+        bentoTitle: "Skill-Karten",
+        bentoSubtitle: "Größere Karten betonen die stärksten Signale; alles verlinkt zu Belegen.",
+        featured: "Top-Signal",
+        emptyFiltered: "Keine Skills passen zu diesem Filter.",
+        emptyPublished: "Noch keine Skills veröffentlicht."
+      }
+    }
+  },
+  roadmapPage: {
+    id: "roadmapPage",
+    version: 1,
+    updatedAt: now,
+    locales: {
+      en: {
+        eyebrow: "Roadmap",
+        title: "Professional progression by phases and milestones",
+        description: "A visual journey of execution, learning, and validation across the next phases.",
+        phaseLabel: "Phase",
+        featuredBadge: "Featured",
+        openMilestoneCta: "Open milestone",
+        itemCountLabel: "items",
+        emptyRoadmap: "No roadmap phases published yet.",
+        emptyPhase: "No milestones in this phase yet.",
+        minimapButton: "Phase map",
+        minimapTitle: "Roadmap phases",
+        minimapClose: "Close",
+        minimapAriaNav: "Roadmap phase minimap"
+      },
+      de: {
+        eyebrow: "Roadmap",
+        title: "Beruflicher Fortschritt in Phasen und Meilensteinen",
+        description: "Eine visuelle Entwicklung über Ausführung, Lernen und Validierung entlang der nächsten Phasen.",
+        phaseLabel: "Phase",
+        featuredBadge: "Hervorgehoben",
+        openMilestoneCta: "Meilenstein öffnen",
+        itemCountLabel: "Einträge",
+        emptyRoadmap: "Noch keine Roadmap-Phasen veröffentlicht.",
+        emptyPhase: "In dieser Phase sind noch keine Meilensteine vorhanden.",
+        minimapButton: "Phasen-Map",
+        minimapTitle: "Roadmap-Phasen",
+        minimapClose: "Schliessen",
+        minimapAriaNav: "Phasen-Minimap der Roadmap"
+      }
+    }
+  },
+  certificationsPage: {
+    id: "certificationsPage",
+    version: 1,
+    updatedAt: now,
+    locales: {
+      en: {
+        eyebrow: "Formal learning",
+        title: "Certifications and structured learning signals",
+        description:
+          "A traceable view of completed, in-progress and planned certifications — aligned with your roadmap and easy to filter.",
+        kpiCompleted: "Completed",
+        kpiInProgress: "In progress",
+        kpiPlanned: "Planned",
+        filterByProvider: "Provider",
+        filterByState: "State",
+        filterAll: "All",
+        viewLabel: "Layout",
+        viewTimeline: "Timeline",
+        viewBrowse: "Browse",
+        viewToggleAria: "Choose certification layout",
+        timelineTitle: "Learning timeline",
+        browseTitle: "Browse results",
+        browseDescription: "Dense grid: scan and compare filtered certifications faster.",
+        resultCountOne: "1 certification",
+        resultCountMany: "{{n}} certifications",
+        dateLabel: "Relevant date",
+        emptyTitle: "No certifications match the current filters",
+        emptyDescription: "Try another provider or state to explore your learning roadmap.",
+        stateChipCompleted: "Completed",
+        stateChipInProgress: "In progress",
+        stateChipPlanned: "Planned"
+      },
+      de: {
+        eyebrow: "Formales Lernen",
+        title: "Zertifizierungen und strukturierte Lernsignale",
+        description:
+          "Nachvollziehbare Übersicht über abgeschlossene, laufende und geplante Zertifizierungen — filterbar und an die Roadmap gekoppelt.",
+        kpiCompleted: "Abgeschlossen",
+        kpiInProgress: "In Bearbeitung",
+        kpiPlanned: "Geplant",
+        filterByProvider: "Anbieter",
+        filterByState: "Status",
+        filterAll: "Alle",
+        viewLabel: "Ansicht",
+        viewTimeline: "Timeline",
+        viewBrowse: "Übersicht",
+        viewToggleAria: "Darstellung der Zertifizierungen wählen",
+        timelineTitle: "Lern-Timeline",
+        browseTitle: "Gefilterte Ergebnisse",
+        browseDescription: "Kompaktes Raster: gefilterte Zertifizierungen schneller vergleichen.",
+        resultCountOne: "1 Zertifizierung",
+        resultCountMany: "{{n}} Zertifizierungen",
+        dateLabel: "Stichtag",
+        emptyTitle: "Keine Zertifizierungen mit diesen Filtern",
+        emptyDescription: "Wähle einen anderen Anbieter oder Status, um deine Lern-Roadmap zu sehen.",
+        stateChipCompleted: "Abgeschlossen",
+        stateChipInProgress: "In Bearbeitung",
+        stateChipPlanned: "Geplant"
       }
     }
   },
@@ -335,7 +660,7 @@ export const seedContentStore: ContentStore = {
         headline: "About",
         intro: "I bridge product strategy and engineering delivery with measurable outcomes.",
         summary:
-          "This profile highlights architecture, delivery practices and measurable outcomes—ready to tailor in the admin.",
+          "This super-seeded profile demonstrates scalability in content modeling, long-form lab documentation, and editorial operations under dense datasets.",
         location: "Europe",
         roleFocus: "Full-stack product engineering with platform and DevSecOps mindset",
         yearsExperience: "5+ years",
@@ -348,7 +673,7 @@ export const seedContentStore: ContentStore = {
         headline: "Über mich",
         intro: "Ich verbinde Produktstrategie und Engineering-Umsetzung mit messbaren Ergebnissen.",
         summary:
-          "Dieses Profil betont Architektur, Delivery-Praktiken und messbare Ergebnisse—im Admin anpassbar.",
+          "Dieses super-seeded Profil zeigt Skalierbarkeit bei Content-Modellierung, langen Lab-Dokumenten und redaktionellen Abläufen unter hoher Datendichte.",
         location: "Europa",
         roleFocus: "Full-Stack Product Engineering mit Plattform- und DevSecOps-Mindset",
         yearsExperience: "5+ Jahre",
@@ -410,11 +735,11 @@ export const seedContentStore: ContentStore = {
   media,
   activity: [
     {
-      id: "activity-seed-initial-empty",
+      id: "activity-seed-superpopulated",
       type: "create",
       collection: "system",
-      targetId: "initial-empty-seed",
-      message: `Initial empty seed loaded: ${skills.length} skills, ${labs.length} labs, ${certifications.length} certifications, ${roadmapPhases.length} phases, ${roadmapMilestones.length} milestones, ${media.length} media.`,
+      targetId: "super-seed",
+      message: `Super-seed loaded: ${skills.length} skills, ${labs.length} labs, ${certifications.length} certifications, ${roadmapPhases.length} phases, ${roadmapMilestones.length} milestones, ${media.length} media.`,
       createdAt: now
     }
   ]

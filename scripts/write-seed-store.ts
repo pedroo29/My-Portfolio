@@ -1,3 +1,6 @@
+/**
+ * Sobrescribe `data/runtime/store.json` con el dataset grande de `seed-data.ts` (solo desarrollo/demo).
+ */
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { seedContentStore } from "../src/lib/seed-data";

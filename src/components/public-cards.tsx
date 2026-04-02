@@ -3,15 +3,9 @@ import Link from "next/link";
 import { SkillProgressBarInView } from "@/components/skill-progress-bar-in-view";
 import { SkillProgressBar } from "@/components/skill-progress-bar";
 import { Badge, Panel } from "@/components/ui";
-import {
-  certificationStateLabels,
-  certificationsVisualLabels,
-  labLevelLabels,
-  labStateLabels,
-  milestoneStateLabels,
-  milestoneStepPrefix
-} from "@/lib/constants";
-import type { Locale } from "@/lib/types";
+import type { CertificationCardCopy } from "@/lib/content";
+import { labLevelLabels, labStateLabels, milestoneStateLabels, milestoneStepPrefix } from "@/lib/constants";
+import type { CertificationState, Locale } from "@/lib/types";
 
 export function LabCard({
   locale,
@@ -94,13 +88,13 @@ export function SkillCard({
   );
 }
 
-const certificationTimelineBorder: Record<keyof typeof certificationStateLabels, string> = {
+const certificationTimelineBorder: Record<CertificationState, string> = {
   completed: "border-l-emerald-500/90",
   "in-progress": "border-l-cyan-400/90",
   planned: "border-l-amber-400/85"
 };
 
-const certificationBrowseTop: Record<keyof typeof certificationStateLabels, string> = {
+const certificationBrowseTop: Record<CertificationState, string> = {
   completed: "border-t-emerald-500/95",
   "in-progress": "border-t-cyan-400/95",
   planned: "border-t-amber-400/90"
@@ -113,14 +107,16 @@ export function CertificationCard({
   state,
   date,
   note,
+  cardLabels,
   variant = "timeline"
 }: {
   locale: Locale;
   title: string;
   provider: string;
-  state: keyof typeof certificationStateLabels;
+  state: CertificationState;
   date: string;
   note: string;
+  cardLabels: CertificationCardCopy;
   /** `browse`: tarjeta compacta para rejilla con muchos ítems filtrados. */
   variant?: "timeline" | "browse";
 }) {
@@ -148,7 +144,7 @@ export function CertificationCard({
         <div className="flex flex-wrap gap-2">
           <Badge tone="accent">{provider}</Badge>
           <Badge tone={state === "completed" ? "success" : state === "planned" ? "warning" : "accent"}>
-            {certificationsVisualLabels[locale].stateChips[state]}
+            {cardLabels.stateChips[state]}
           </Badge>
         </div>
         {showDate ? (
@@ -159,7 +155,7 @@ export function CertificationCard({
                 : "shrink-0 text-xs font-medium uppercase tracking-[0.2em] text-cyan-200/90"
             }
           >
-            <span className="sr-only">{certificationsVisualLabels[locale].dateLabel}: </span>
+            <span className="sr-only">{cardLabels.dateLabel}: </span>
             {formattedDate}
           </p>
         ) : null}

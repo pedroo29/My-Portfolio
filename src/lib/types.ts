@@ -141,11 +141,107 @@ export interface LocalizedHomeContent {
   primaryCtaLabel: string;
   secondaryCtaLabel: string;
   statsHeading: string;
+  /** Subtítulo bajo el bloque de estadísticas del hero. */
+  statsSubtitle: string;
+  /** Etiquetas KPI (hero): Labs, Certifications, Skills. */
+  kpiLabsLabel: string;
+  kpiCertificationsLabel: string;
+  kpiSkillsLabel: string;
+  /**
+   * Texto con marcadores `{{availability}}` y `{{channel}}` (sustituidos con datos de contacto).
+   */
+  availabilityLineTemplate: string;
   featuredLabsHeading: string;
+  featuredLabsDescription: string;
+  featuredLabsEmptyTitle: string;
+  featuredLabsEmptyDescription: string;
+  featuredLabsEmptyCta: string;
   skillsHeading: string;
+  skillsDescription: string;
+  skillsEmptyTitle: string;
+  skillsEmptyDescription: string;
+  skillsEmptyCta: string;
+  skillsViewAll: string;
   roadmapHeading: string;
+  roadmapDescription: string;
+  roadmapViewFull: string;
+  roadmapCurrentFocusLabel: string;
+  roadmapEmptyTitle: string;
+  roadmapEmptyDescription: string;
   closingHeading: string;
   closingText: string;
+  carouselLabsRegion: string;
+  carouselLabsPrev: string;
+  carouselLabsNext: string;
+}
+
+/** Textos de la página pública `/[locale]/skills`. */
+export interface LocalizedSkillsPageContent {
+  eyebrow: string;
+  title: string;
+  description: string;
+  matrixTitle: string;
+  matrixSubtitle: string;
+  filterAll: string;
+  filterByTag: string;
+  viewMatrix: string;
+  viewList: string;
+  /** Cuando hay exactamente 1 lab vinculado (sin `{{n}}`). */
+  labsLinkedOne: string;
+  /** Para más de un lab; usar marcador `{{n}}`. */
+  labsLinkedMany: string;
+  openSkill: string;
+  bentoTitle: string;
+  bentoSubtitle: string;
+  featured: string;
+  emptyFiltered: string;
+  emptyPublished: string;
+}
+
+/** Textos de la página pública `/[locale]/roadmap` (incl. minimapa). */
+export interface LocalizedRoadmapPageContent {
+  eyebrow: string;
+  title: string;
+  description: string;
+  phaseLabel: string;
+  featuredBadge: string;
+  openMilestoneCta: string;
+  itemCountLabel: string;
+  emptyRoadmap: string;
+  emptyPhase: string;
+  minimapButton: string;
+  minimapTitle: string;
+  minimapClose: string;
+  minimapAriaNav: string;
+}
+
+/** Textos de la página pública `/[locale]/certifications`. */
+export interface LocalizedCertificationsPageContent {
+  eyebrow: string;
+  title: string;
+  description: string;
+  kpiCompleted: string;
+  kpiInProgress: string;
+  kpiPlanned: string;
+  filterByProvider: string;
+  filterByState: string;
+  filterAll: string;
+  viewLabel: string;
+  viewTimeline: string;
+  viewBrowse: string;
+  viewToggleAria: string;
+  timelineTitle: string;
+  browseTitle: string;
+  browseDescription: string;
+  resultCountOne: string;
+  /** Plural con marcador `{{n}}`. */
+  resultCountMany: string;
+  dateLabel: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  stateChipCompleted: string;
+  stateChipInProgress: string;
+  stateChipPlanned: string;
 }
 
 export interface LocalizedAboutContent {
@@ -190,6 +286,9 @@ export interface ContactChannels {
 }
 
 export interface HomeContent extends GlobalContent<LocalizedHomeContent> {}
+export interface SkillsPageContent extends GlobalContent<LocalizedSkillsPageContent> {}
+export interface RoadmapPageContent extends GlobalContent<LocalizedRoadmapPageContent> {}
+export interface CertificationsPageContent extends GlobalContent<LocalizedCertificationsPageContent> {}
 export interface AboutContent extends GlobalContent<LocalizedAboutContent> {}
 export interface ContactContent extends GlobalContent<LocalizedContactContent>, ContactChannels {}
 export interface PrivacyContent extends GlobalContent<LocalizedPrivacyContent> {}
@@ -251,6 +350,9 @@ export interface ContentStore {
   roadmapPhases: RoadmapPhase[];
   roadmapMilestones: RoadmapMilestone[];
   home: HomeContent;
+  skillsPage: SkillsPageContent;
+  roadmapPage: RoadmapPageContent;
+  certificationsPage: CertificationsPageContent;
   about: AboutContent;
   contact: ContactContent;
   privacy: PrivacyContent;

@@ -2,8 +2,14 @@ import Link from "next/link";
 
 import { CertificationCard } from "@/components/public-cards";
 import { EmptyState, Section } from "@/components/ui";
-import { certificationsPageContent, certificationsVisualLabels } from "@/lib/constants";
-import { getCatalogs, getCertifications, resolveProviderLabel } from "@/lib/content";
+import {
+  certificationCardLabelsFromPage,
+  formatCertificationResultCount,
+  getCatalogs,
+  getCertifications,
+  getCertificationsPageContent,
+  resolveProviderLabel
+} from "@/lib/content";
 import { cn } from "@/lib/utils";
 import { getQueryParam } from "@/lib/search-params";
 import type { CertificationState, Locale } from "@/lib/types";
@@ -59,14 +65,18 @@ export default async function CertificationsPage({
   const state = getQueryParam(queryParams, "state") as CertificationState | "";
   const viewMode = parseCertView(getQueryParam(queryParams, "view"));
 
-  const [certifications, catalogs] = await Promise.all([getCertifications(typedLocale), getCatalogs()]);
+  const [certifications, catalogs, pageCopy] = await Promise.all([
+    getCertifications(typedLocale),
+    getCatalogs(),
+    getCertificationsPageContent(typedLocale)
+  ]);
+  const certCardLabels = certificationCardLabelsFromPage(pageCopy);
   const filtered = certifications.filter(
     (item) => (!provider || item.providerId === provider) && (!state || item.state === state)
   );
   const sorted = [...filtered].sort(compareCertificationsForDisplay);
 
-  const pageCopy = certificationsPageContent[typedLocale];
-  const visual = certificationsVisualLabels[typedLocale];
+  const visual = pageCopy;
 
   const countFor = (s: CertificationState) => certifications.filter((c) => c.state === s).length;
   const kpiCompleted = countFor("completed");
@@ -89,7 +99,7 @@ export default async function CertificationsPage({
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950/95 to-cyan-950/25" aria-hidden />
         <div className="relative space-y-8 p-6 sm:p-8 md:p-10">
-          <Section eyebrow={pageCopy.eyebrow} title={pageCopy.title} description={pageCopy.description}>
+          <Section eyebrow={visual.eyebrow} title={visual.title} description={visual.description}>
             <div className="grid gap-4 sm:grid-cols-3">
               {[
                 { label: visual.kpiCompleted, value: kpiCompleted, accent: "from-emerald-500/20 to-transparent" },
@@ -177,7 +187,11 @@ export default async function CertificationsPage({
                 href={certificationsHref(typedLocale, { provider: provider || undefined, state: s, view: viewPreserved })}
                 className={cn(chipBase, state === s ? chipActive : chipInactive)}
               >
-                {visual.stateChips[s]}
+                {s === "completed"
+                  ? visual.stateChipCompleted
+                  : s === "in-progress"
+                    ? visual.stateChipInProgress
+                    : visual.stateChipPlanned}
               </Link>
             ))}
           </div>
@@ -214,6 +228,7 @@ export default async function CertificationsPage({
                       state={item.state}
                       date={item.relevantDate}
                       note={item.content.note}
+                      cardLabels={certCardLabels}
                       variant="timeline"
                     />
                   </div>
@@ -229,7 +244,9 @@ export default async function CertificationsPage({
               <h2 className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">{visual.browseTitle}</h2>
               <p className="max-w-2xl text-sm text-slate-500">{visual.browseDescription}</p>
             </div>
-            <p className="text-sm tabular-nums text-slate-400">{visual.resultCount(sorted.length)}</p>
+            <p className="text-sm tabular-nums text-slate-400">
+              {formatCertificationResultCount(visual, sorted.length)}
+            </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {sorted.map((item) => (
@@ -241,6 +258,7 @@ export default async function CertificationsPage({
                 state={item.state}
                 date={item.relevantDate}
                 note={item.content.note}
+                cardLabels={certCardLabels}
                 variant="browse"
               />
             ))}

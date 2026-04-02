@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "seed:store": "tsx scripts/write-seed-store.ts"
+    "seed:store": "tsx scripts/write-seed-store.ts",
+    "bootstrap:empty-store": "tsx scripts/write-bootstrap-store.ts"
   },
   "dependencies": {
     "next": "16.2.1",

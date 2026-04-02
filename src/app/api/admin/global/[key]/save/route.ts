@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApiSession } from "@/lib/server/auth";
 import { saveGlobalResource } from "@/lib/server/content-store";
 
-const allowedKeys = ["home", "about", "contact", "privacy"] as const;
+const allowedKeys = ["home", "skillsPage", "roadmapPage", "certificationsPage", "about", "contact", "privacy"] as const;
 
 export async function POST(
   request: Request,
@@ -19,7 +19,11 @@ export async function POST(
   }
 
   const body = (await request.json()) as { data: { version?: number }; expectedVersion: number };
-  const result = await saveGlobalResource(key as "home" | "about" | "contact" | "privacy", body.data, body.expectedVersion);
+  const result = await saveGlobalResource(
+    key as (typeof allowedKeys)[number],
+    body.data,
+    body.expectedVersion
+  );
 
   if (!result.ok) {
     return NextResponse.json(result, { status: 409 });

@@ -1,11 +1,22 @@
 import { defaultLocale } from "@/lib/constants";
+import {
+  CERTIFICATIONS_PAGE_DEFAULTS,
+  HOME_LOCALE_DEFAULTS,
+  ROADMAP_PAGE_DEFAULTS,
+  SKILLS_PAGE_DEFAULTS
+} from "@/lib/content-defaults";
 import { readStore } from "@/lib/server/content-store";
 import type {
   Catalogs,
   Certification,
+  CertificationState,
   CollectionOption,
   Lab,
   Locale,
+  LocalizedCertificationsPageContent,
+  LocalizedHomeContent,
+  LocalizedRoadmapPageContent,
+  LocalizedSkillsPageContent,
   MediaAsset,
   RoadmapMilestone,
   RoadmapPhase,
@@ -34,9 +45,63 @@ export async function getPublicStore() {
   return readStore();
 }
 
-export async function getHomeContent(locale: Locale) {
+export type CertificationCardCopy = {
+  dateLabel: string;
+  stateChips: Record<CertificationState, string>;
+};
+
+export function formatLabsLinked(copy: Pick<LocalizedSkillsPageContent, "labsLinkedOne" | "labsLinkedMany">, n: number): string {
+  if (n === 1) return copy.labsLinkedOne;
+  return copy.labsLinkedMany.replace(/\{\{n\}\}/g, String(n));
+}
+
+export function formatCertificationResultCount(
+  copy: Pick<LocalizedCertificationsPageContent, "resultCountOne" | "resultCountMany">,
+  n: number
+): string {
+  if (n === 1) return copy.resultCountOne;
+  return copy.resultCountMany.replace(/\{\{n\}\}/g, String(n));
+}
+
+export function certificationCardLabelsFromPage(copy: LocalizedCertificationsPageContent): CertificationCardCopy {
+  return {
+    dateLabel: copy.dateLabel,
+    stateChips: {
+      completed: copy.stateChipCompleted,
+      "in-progress": copy.stateChipInProgress,
+      planned: copy.stateChipPlanned
+    }
+  };
+}
+
+export function formatHomeAvailabilityLine(template: string, availabilityLabel: string, channel: string) {
+  return template
+    .replace(/\{\{availability\}\}/g, availabilityLabel)
+    .replace(/\{\{channel\}\}/g, channel);
+}
+
+export async function getHomeContent(locale: Locale): Promise<LocalizedHomeContent> {
   const store = await readStore();
-  return pickLocalized(store.home.locales, locale);
+  const fromStore = pickLocalized(store.home.locales, locale) as Partial<LocalizedHomeContent>;
+  return { ...HOME_LOCALE_DEFAULTS[locale], ...fromStore };
+}
+
+export async function getSkillsPageContent(locale: Locale): Promise<LocalizedSkillsPageContent> {
+  const store = await readStore();
+  const fromStore = pickLocalized(store.skillsPage.locales, locale) as Partial<LocalizedSkillsPageContent>;
+  return { ...SKILLS_PAGE_DEFAULTS[locale], ...fromStore };
+}
+
+export async function getRoadmapPageContent(locale: Locale): Promise<LocalizedRoadmapPageContent> {
+  const store = await readStore();
+  const fromStore = pickLocalized(store.roadmapPage.locales, locale) as Partial<LocalizedRoadmapPageContent>;
+  return { ...ROADMAP_PAGE_DEFAULTS[locale], ...fromStore };
+}
+
+export async function getCertificationsPageContent(locale: Locale): Promise<LocalizedCertificationsPageContent> {
+  const store = await readStore();
+  const fromStore = pickLocalized(store.certificationsPage.locales, locale) as Partial<LocalizedCertificationsPageContent>;
+  return { ...CERTIFICATIONS_PAGE_DEFAULTS[locale], ...fromStore };
 }
 
 export async function getAboutContent(locale: Locale) {

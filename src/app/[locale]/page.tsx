@@ -1,15 +1,9 @@
 import { CarouselSlide, HorizontalCarousel } from "@/components/horizontal-carousel";
 import { CTAButton, EmptyState, Section } from "@/components/ui";
 import { LabCard, MilestoneCard, SkillCard } from "@/components/public-cards";
+import { availabilityLabels } from "@/lib/constants";
 import {
-  availabilityLabels,
-  homeCarouselAria,
-  homePageVisualLabels,
-  homeRoadmapCurrentFocusLabels,
-  homeRoadmapEmptyTitleLabels,
-  homeRoadmapNoActiveFocusLabels
-} from "@/lib/constants";
-import {
+  formatHomeAvailabilityLine,
   getCatalogs,
   getCertifications,
   getContactContent,
@@ -51,7 +45,6 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   const typedLocale = locale as Locale;
-  const visual = homePageVisualLabels[typedLocale];
 
   const [home, contact, labs, skills, roadmap, catalogs, certifications] = await Promise.all([
     getHomeContent(typedLocale),
@@ -64,7 +57,6 @@ export default async function HomePage({
   ]);
 
   const featuredLabs = labs.filter((lab) => lab.isTopCaseStudy);
-  const carousel = homeCarouselAria[typedLocale];
   const roadmapFocus = getRoadmapFocusForHome(roadmap.phases, roadmap.milestones);
 
   const skillsPreview =
@@ -116,13 +108,13 @@ export default async function HomePage({
             <div className="reveal-up delay-4 flex flex-col justify-center space-y-4 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-5 shadow-inner shadow-slate-950/30 md:p-6">
               <div className="space-y-1.5">
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-500">{home.statsHeading}</p>
-                <h2 className="text-lg font-semibold leading-snug text-slate-50 md:text-xl">{visual.statsSubtitle}</h2>
+                <h2 className="text-lg font-semibold leading-snug text-slate-50 md:text-xl">{home.statsSubtitle}</h2>
               </div>
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 {[
-                  { label: visual.kpiLabs, value: labs.length, accent: "from-cyan-400/18 to-transparent" },
-                  { label: visual.kpiCertifications, value: certifications.length, accent: "from-emerald-400/16 to-transparent" },
-                  { label: visual.kpiSkills, value: skills.length, accent: "from-fuchsia-400/16 to-transparent" }
+                  { label: home.kpiLabsLabel, value: labs.length, accent: "from-cyan-400/18 to-transparent" },
+                  { label: home.kpiCertificationsLabel, value: certifications.length, accent: "from-emerald-400/16 to-transparent" },
+                  { label: home.kpiSkillsLabel, value: skills.length, accent: "from-fuchsia-400/16 to-transparent" }
                 ].map((kpi) => (
                   <div
                     key={kpi.label}
@@ -138,7 +130,8 @@ export default async function HomePage({
                 ))}
               </div>
               <p className="text-sm leading-relaxed text-slate-400">
-                {visual.availabilityLine(
+                {formatHomeAvailabilityLine(
+                  home.availabilityLineTemplate,
                   availabilityLabels[contact.channels.availability],
                   contact.content.preferredChannel
                 )}
@@ -151,23 +144,19 @@ export default async function HomePage({
       <Section
         className="space-y-5"
         title={home.featuredLabsHeading}
-        description={visual.featuredLabsDescription}
+        description={home.featuredLabsDescription}
       >
         {featuredLabs.length === 0 ? (
           <EmptyState
-            title={typedLocale === "de" ? "Keine hervorgehobenen Case Studies" : "No featured case studies yet"}
-            description={
-              typedLocale === "de"
-                ? "Markiere Labs als Top Case Study im Admin oder besuche die vollständige Labs-Übersicht."
-                : "Mark labs as top case studies in the admin, or browse the full labs list."
-            }
-            action={<CTAButton href={`/${typedLocale}/labs`}>{typedLocale === "de" ? "Alle Labs" : "View all labs"}</CTAButton>}
+            title={home.featuredLabsEmptyTitle}
+            description={home.featuredLabsEmptyDescription}
+            action={<CTAButton href={`/${typedLocale}/labs`}>{home.featuredLabsEmptyCta}</CTAButton>}
           />
         ) : (
           <HorizontalCarousel
-            ariaLabel={carousel.labsRegion}
-            prevLabel={carousel.labsPrev}
-            nextLabel={carousel.labsNext}
+            ariaLabel={home.carouselLabsRegion}
+            prevLabel={home.carouselLabsPrev}
+            nextLabel={home.carouselLabsNext}
           >
             {featuredLabs.map((lab) => (
               <CarouselSlide key={lab.id}>
@@ -202,12 +191,12 @@ export default async function HomePage({
           aria-hidden
         />
         <div className="relative p-6 sm:p-8 md:p-10">
-          <Section className="space-y-5" title={home.skillsHeading} description={visual.skillsDescription}>
+          <Section className="space-y-5" title={home.skillsHeading} description={home.skillsDescription}>
             {skills.length === 0 ? (
               <EmptyState
-                title={typedLocale === "de" ? "Noch keine Skills" : "No skills yet"}
-                description={typedLocale === "de" ? "Skills im Admin anlegen." : "Add skills in the admin panel."}
-                action={<CTAButton href={`/${typedLocale}/skills`}>{typedLocale === "de" ? "Zu Skills" : "View skills"}</CTAButton>}
+                title={home.skillsEmptyTitle}
+                description={home.skillsEmptyDescription}
+                action={<CTAButton href={`/${typedLocale}/skills`}>{home.skillsEmptyCta}</CTAButton>}
               />
             ) : (
               <>
@@ -227,7 +216,7 @@ export default async function HomePage({
                 {showSkillsViewAll ? (
                   <div className="flex justify-center pt-4 sm:pt-6">
                     <CTAButton href={`/${typedLocale}/skills`} secondary>
-                      {visual.skillsViewAll}
+                      {home.skillsViewAll}
                     </CTAButton>
                   </div>
                 ) : null}
@@ -240,10 +229,10 @@ export default async function HomePage({
       <Section
         className="space-y-5"
         title={home.roadmapHeading}
-        description={visual.roadmapDescription}
+        description={home.roadmapDescription}
         action={
           <CTAButton href={`/${typedLocale}/roadmap`} secondary>
-            {visual.roadmapViewFull}
+            {home.roadmapViewFull}
           </CTAButton>
         }
       >
@@ -264,7 +253,7 @@ export default async function HomePage({
               />
               <div className="relative">
                 <p className={cn("text-sm uppercase tracking-[0.24em]", phaseAccent.label)}>
-                  {homeRoadmapCurrentFocusLabels[typedLocale]}
+                  {home.roadmapCurrentFocusLabel}
                 </p>
                 <h3 className="mt-3 text-xl font-semibold text-slate-50 md:text-2xl">{roadmapFocus.phase.content.title}</h3>
                 <p className="mt-2 max-w-3xl text-sm text-slate-400 md:text-base">{roadmapFocus.phase.content.summary}</p>
@@ -285,10 +274,7 @@ export default async function HomePage({
             </div>
           </div>
         ) : (
-          <EmptyState
-            title={homeRoadmapEmptyTitleLabels[typedLocale]}
-            description={homeRoadmapNoActiveFocusLabels[typedLocale]}
-          />
+          <EmptyState title={home.roadmapEmptyTitle} description={home.roadmapEmptyDescription} />
         )}
       </Section>
 

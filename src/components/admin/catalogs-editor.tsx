@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Catalogs } from "@/lib/types";
 import { parseLines } from "@/lib/utils";
@@ -24,10 +24,19 @@ function parse(value: string) {
 }
 
 export function CatalogsEditor({ initialValue }: { initialValue: Catalogs }) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [categories, setCategories] = useState(serialize(initialValue.categories));
   const [providers, setProviders] = useState(serialize(initialValue.providers));
   const [tags, setTags] = useState(serialize(initialValue.tags));
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (!message) return;
+    const id = requestAnimationFrame(() => {
+      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [message]);
 
   const preview = useMemo(
     () => ({
@@ -39,15 +48,19 @@ export function CatalogsEditor({ initialValue }: { initialValue: Catalogs }) {
   );
 
   return (
-    <div className="space-y-6">
+    <div ref={rootRef} className="space-y-6 scroll-mt-6">
+      {message ? (
+        <div role="status" aria-live="polite" className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+          {message}
+        </div>
+      ) : null}
+
       <div className="rounded-3xl border border-slate-800 bg-slate-950/50 p-6">
         <h1 className="text-3xl font-semibold text-slate-50">Catalogs manager</h1>
         <p className="mt-2 text-sm text-slate-400">
           Edit category, provider and tag catalogs with legible labels for relation pickers.
         </p>
       </div>
-
-      {message ? <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{message}</div> : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="space-y-6">

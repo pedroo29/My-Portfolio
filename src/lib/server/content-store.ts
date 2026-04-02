@@ -3,15 +3,17 @@ import "server-only";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { seedContentStore } from "@/lib/seed-data";
+import { buildBootstrapContentStore } from "@/lib/content-defaults";
 import type {
   ActivityEvent,
   CollectionKey,
   ContentStore,
   GlobalContent,
   HealthStatus,
+  Lab,
   LabLevel,
-  MediaAsset
+  MediaAsset,
+  Skill
 } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 
@@ -29,15 +31,26 @@ async function writeStore(store: ContentStore) {
   await writeFile(storeFilePath, JSON.stringify(store, null, 2), "utf-8");
 }
 
+function withDefaultPageSlices(store: ContentStore): ContentStore {
+  const boot = buildBootstrapContentStore();
+  return {
+    ...store,
+    skillsPage: store.skillsPage ?? structuredClone(boot.skillsPage),
+    roadmapPage: store.roadmapPage ?? structuredClone(boot.roadmapPage),
+    certificationsPage: store.certificationsPage ?? structuredClone(boot.certificationsPage)
+  };
+}
+
 export async function readStore(): Promise<ContentStore> {
   await ensureRuntime();
 
   try {
     const raw = await readFile(storeFilePath, "utf-8");
-    return JSON.parse(raw) as ContentStore;
+    return withDefaultPageSlices(JSON.parse(raw) as ContentStore);
   } catch {
-    await writeStore(seedContentStore);
-    return structuredClone(seedContentStore);
+    const initial = buildBootstrapContentStore();
+    await writeStore(initial);
+    return structuredClone(initial);
   }
 }
 
@@ -78,12 +91,88 @@ function normalizeSkillEntity<T extends { progress?: unknown; level?: LabLevel }
   };
 }
 
+function bumpEntityVersion<T extends { version: number; updatedAt: string }>(row: T) {
+  row.version += 1;
+  row.updatedAt = new Date().toISOString();
+}
+
+/** Mantiene `skill.labIds` alineado con `lab.skillIds` (un solo write al store). */
+function syncLabToSkills(store: ContentStore, labId: string, previousSkillIds: string[], nextSkillIds: string[]) {
+  const prev = new Set(previousSkillIds);
+  const next = new Set(nextSkillIds);
+
+  for (const sid of prev) {
+    if (next.has(sid)) continue;
+    const skill = store.skills.find((s) => s.id === sid);
+    if (!skill) continue;
+    if (skill.labIds.includes(labId)) {
+      skill.labIds = skill.labIds.filter((id) => id !== labId);
+      bumpEntityVersion(skill);
+    }
+  }
+
+  for (const sid of next) {
+    const skill = store.skills.find((s) => s.id === sid);
+    if (!skill) continue;
+    if (!skill.labIds.includes(labId)) {
+      skill.labIds = [...skill.labIds, labId];
+      bumpEntityVersion(skill);
+    }
+  }
+}
+
+/** Mantiene `lab.skillIds` alineado con `skill.labIds`. */
+function syncSkillToLabs(store: ContentStore, skillId: string, previousLabIds: string[], nextLabIds: string[]) {
+  const prev = new Set(previousLabIds);
+  const next = new Set(nextLabIds);
+
+  for (const lid of prev) {
+    if (next.has(lid)) continue;
+    const lab = store.labs.find((l) => l.id === lid);
+    if (!lab) continue;
+    if (lab.skillIds.includes(skillId)) {
+      lab.skillIds = lab.skillIds.filter((id) => id !== skillId);
+      bumpEntityVersion(lab);
+    }
+  }
+
+  for (const lid of next) {
+    const lab = store.labs.find((l) => l.id === lid);
+    if (!lab) continue;
+    if (!lab.skillIds.includes(skillId)) {
+      lab.skillIds = [...lab.skillIds, skillId];
+      bumpEntityVersion(lab);
+    }
+  }
+}
+
+function removeLabFromAllSkills(store: ContentStore, labId: string) {
+  for (const skill of store.skills) {
+    if (!skill.labIds.includes(labId)) continue;
+    skill.labIds = skill.labIds.filter((id) => id !== labId);
+    bumpEntityVersion(skill);
+  }
+}
+
+function removeSkillFromAllLabs(store: ContentStore, skillId: string) {
+  for (const lab of store.labs) {
+    if (!lab.skillIds.includes(skillId)) continue;
+    lab.skillIds = lab.skillIds.filter((id) => id !== skillId);
+    bumpEntityVersion(lab);
+  }
+}
+
 export async function listCollection<T>(key: CollectionKey): Promise<T[]> {
   const store = await readStore();
   return store[key] as unknown as T[];
 }
 
-export async function getSingle<T extends keyof Pick<ContentStore, "home" | "about" | "contact" | "privacy" | "catalogs">>(key: T): Promise<ContentStore[T]> {
+export async function getSingle<
+  T extends keyof Pick<
+    ContentStore,
+    "home" | "skillsPage" | "roadmapPage" | "certificationsPage" | "about" | "contact" | "privacy" | "catalogs"
+  >
+>(key: T): Promise<ContentStore[T]> {
   const store = await readStore();
   return store[key];
 }
@@ -126,8 +215,17 @@ export async function saveCollectionEntity<T extends { id?: string; slug?: strin
 
   const index = collection.findIndex((item) => item.id === persisted.id);
 
+  let previousLabSkillIds: string[] = [];
+  let previousSkillLabIds: string[] = [];
+
   if (index >= 0) {
     const current = collection[index];
+    if (key === "labs") {
+      previousLabSkillIds = [...(((current as unknown) as Lab).skillIds ?? [])];
+    }
+    if (key === "skills") {
+      previousSkillLabIds = [...(((current as unknown) as Skill).labIds ?? [])];
+    }
     if (current.version !== expectedVersion) {
       return {
         ok: false as const,
@@ -150,6 +248,16 @@ export async function saveCollectionEntity<T extends { id?: string; slug?: strin
   }
 
   ((store as unknown) as Record<string, unknown>)[key] = collection;
+
+  if (key === "labs") {
+    const savedLab = collection[index >= 0 ? index : 0] as unknown as Lab;
+    syncLabToSkills(store, savedLab.id, previousLabSkillIds, savedLab.skillIds ?? []);
+  }
+  if (key === "skills") {
+    const savedSkill = collection[index >= 0 ? index : 0] as unknown as Skill;
+    syncSkillToLabs(store, savedSkill.id, previousSkillLabIds, savedSkill.labIds ?? []);
+  }
+
   store.activity = [
     createActivityEvent(
       key,
@@ -169,6 +277,12 @@ export async function saveCollectionEntity<T extends { id?: string; slug?: strin
 
 export async function deleteCollectionEntity(key: CollectionKey, id: string) {
   const store = await readStore();
+  if (key === "labs") {
+    removeLabFromAllSkills(store, id);
+  }
+  if (key === "skills") {
+    removeSkillFromAllLabs(store, id);
+  }
   ((store as unknown) as Record<string, unknown>)[key] = (store[key] as Array<{ id: string }>).filter((item) => item.id !== id);
   store.activity = [
     createActivityEvent(key, id, "delete", `Deleted ${key} entry ${id}.`),
@@ -199,6 +313,16 @@ export async function duplicateCollectionEntity<T extends { id: string; slug: st
   };
 
   ((store as unknown) as Record<string, unknown>)[key] = [duplicated, ...collection];
+
+  if (key === "labs") {
+    const lab = duplicated as unknown as Lab;
+    syncLabToSkills(store, lab.id, [], lab.skillIds ?? []);
+  }
+  if (key === "skills") {
+    const skill = duplicated as unknown as Skill;
+    syncSkillToLabs(store, skill.id, [], skill.labIds ?? []);
+  }
+
   store.activity = [
     createActivityEvent(key, duplicated.id, "create", `Duplicated ${key} entry from ${id}.`),
     ...store.activity
@@ -207,7 +331,7 @@ export async function duplicateCollectionEntity<T extends { id: string; slug: st
 }
 
 export async function saveGlobalResource<T extends Partial<GlobalContent<unknown>> & { id?: string; version?: number }>(
-  key: "home" | "about" | "contact" | "privacy",
+  key: "home" | "skillsPage" | "roadmapPage" | "certificationsPage" | "about" | "contact" | "privacy",
   entity: T,
   expectedVersion: number
 ) {

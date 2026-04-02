@@ -2,10 +2,10 @@ import Link from "next/link";
 
 import { SkillProgressBar } from "@/components/skill-progress-bar";
 import { Badge, Panel } from "@/components/ui";
-import { labLevelLabels, skillsVisualLabels } from "@/lib/constants";
-import { resolveTagLabels } from "@/lib/content";
+import { labLevelLabels } from "@/lib/constants";
+import { formatLabsLinked, resolveTagLabels } from "@/lib/content";
 import { cn } from "@/lib/utils";
-import type { Catalogs, LabLevel, Locale, LocalizedSkillContent, Skill } from "@/lib/types";
+import type { Catalogs, LabLevel, Locale, LocalizedSkillContent, LocalizedSkillsPageContent, Skill } from "@/lib/types";
 
 /** Resultado de `getSkills(locale)` — `content` ya resuelto al locale. */
 export type SkillWithContent = Skill & { content: LocalizedSkillContent };
@@ -54,13 +54,15 @@ function pickFeaturedIds(skills: SkillWithContent[], max = 2) {
 function SkillMatrixCell({
   locale,
   skill,
-  catalogs
+  catalogs,
+  pageCopy
 }: {
   locale: Locale;
   skill: SkillWithContent;
   catalogs: Catalogs;
+  pageCopy: LocalizedSkillsPageContent;
 }) {
-  const labels = skillsVisualLabels[locale];
+  const labels = pageCopy;
   const tagLabels = resolveTagLabels(catalogs, skill.tags.slice(0, 2), locale);
 
   return (
@@ -82,7 +84,9 @@ function SkillMatrixCell({
         />
       </div>
       <p className="mt-2 line-clamp-2 text-xs text-slate-400">{skill.content.summary}</p>
-      <p className="mt-2 text-[0.65rem] uppercase tracking-[0.14em] text-slate-500">{labels.labsLinked(skill.labIds.length)}</p>
+      <p className="mt-2 text-[0.65rem] uppercase tracking-[0.14em] text-slate-500">
+        {formatLabsLinked(labels, skill.labIds.length)}
+      </p>
       {tagLabels.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-1">
           {tagLabels.map((t) => (
@@ -100,14 +104,16 @@ function SkillBentoCard({
   locale,
   skill,
   catalogs,
-  featured
+  featured,
+  pageCopy
 }: {
   locale: Locale;
   skill: SkillWithContent;
   catalogs: Catalogs;
   featured: boolean;
+  pageCopy: LocalizedSkillsPageContent;
 }) {
-  const labels = skillsVisualLabels[locale];
+  const labels = pageCopy;
   const tagLabels = resolveTagLabels(catalogs, skill.tags, locale);
 
   return (
@@ -147,7 +153,7 @@ function SkillBentoCard({
       <p className="relative mt-4 text-sm font-medium text-cyan-200 transition group-hover:text-cyan-100">
         {labels.openSkill} →
       </p>
-      <p className="relative mt-1 text-xs text-slate-500">{labels.labsLinked(skill.labIds.length)}</p>
+      <p className="relative mt-1 text-xs text-slate-500">{formatLabsLinked(labels, skill.labIds.length)}</p>
     </Link>
   );
 }
@@ -155,16 +161,18 @@ function SkillBentoCard({
 function SkillsListView({
   locale,
   skills,
-  catalogs
+  catalogs,
+  pageCopy
 }: {
   locale: Locale;
   skills: SkillWithContent[];
   catalogs: Catalogs;
+  pageCopy: LocalizedSkillsPageContent;
 }) {
   return (
     <div className="space-y-4">
       {skills.map((skill) => {
-        const labels = skillsVisualLabels[locale];
+        const labels = pageCopy;
         return (
           <div key={skill.id} className="rounded-3xl border border-slate-800 bg-slate-950/50 p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -179,7 +187,7 @@ function SkillsListView({
                   {skill.content.name}
                 </Link>
                 <p className="text-sm text-slate-400">{skill.content.summary}</p>
-                <p className="text-xs text-slate-500">{labels.labsLinked(skill.labIds.length)}</p>
+                <p className="text-xs text-slate-500">{formatLabsLinked(labels, skill.labIds.length)}</p>
               </div>
               <div className="w-full max-w-xs space-y-2">
                 <div className="flex items-center justify-between text-sm text-slate-300">
@@ -200,15 +208,17 @@ function SkillsViewToolbar({
   catalogs,
   view,
   activeTagId,
-  tagIds
+  tagIds,
+  pageCopy
 }: {
   locale: Locale;
   catalogs: Catalogs;
   view: "matrix" | "list";
   activeTagId?: string;
   tagIds: string[];
+  pageCopy: LocalizedSkillsPageContent;
 }) {
-  const labels = skillsVisualLabels[locale];
+  const labels = pageCopy;
 
   return (
     <div className="flex flex-col gap-4 border-b border-slate-800/80 pb-6 lg:flex-row lg:items-center lg:justify-between">
@@ -272,7 +282,8 @@ export function SkillsCapabilityView({
   allSkillsForFilters,
   catalogs,
   view,
-  activeTagId
+  activeTagId,
+  pageCopy
 }: {
   locale: Locale;
   skills: SkillWithContent[];
@@ -281,8 +292,9 @@ export function SkillsCapabilityView({
   catalogs: Catalogs;
   view: "matrix" | "list";
   activeTagId?: string;
+  pageCopy: LocalizedSkillsPageContent;
 }) {
-  const labels = skillsVisualLabels[locale];
+  const labels = pageCopy;
   const tagOptions = Array.from(new Set(allSkillsForFilters.flatMap((s) => s.tags)));
 
   if (allSkillsForFilters.length === 0) {
@@ -296,7 +308,14 @@ export function SkillsCapabilityView({
   if (skills.length === 0) {
     return (
       <div className="space-y-6">
-        <SkillsViewToolbar locale={locale} catalogs={catalogs} view={view} activeTagId={activeTagId} tagIds={tagOptions} />
+        <SkillsViewToolbar
+          locale={locale}
+          catalogs={catalogs}
+          view={view}
+          activeTagId={activeTagId}
+          tagIds={tagOptions}
+          pageCopy={pageCopy}
+        />
         <Panel className="text-center">
           <p className="text-sm text-slate-400">{labels.emptyFiltered}</p>
         </Panel>
@@ -307,8 +326,15 @@ export function SkillsCapabilityView({
   if (view === "list") {
     return (
       <div className="space-y-8">
-        <SkillsViewToolbar locale={locale} catalogs={catalogs} view={view} activeTagId={activeTagId} tagIds={tagOptions} />
-        <SkillsListView locale={locale} skills={skills} catalogs={catalogs} />
+        <SkillsViewToolbar
+          locale={locale}
+          catalogs={catalogs}
+          view={view}
+          activeTagId={activeTagId}
+          tagIds={tagOptions}
+          pageCopy={pageCopy}
+        />
+        <SkillsListView locale={locale} skills={skills} catalogs={catalogs} pageCopy={pageCopy} />
       </div>
     );
   }
@@ -318,7 +344,14 @@ export function SkillsCapabilityView({
 
   return (
     <div className="space-y-10">
-      <SkillsViewToolbar locale={locale} catalogs={catalogs} view={view} activeTagId={activeTagId} tagIds={tagOptions} />
+      <SkillsViewToolbar
+        locale={locale}
+        catalogs={catalogs}
+        view={view}
+        activeTagId={activeTagId}
+        tagIds={tagOptions}
+        pageCopy={pageCopy}
+      />
 
       <div className="space-y-2">
         <h3 className="text-lg font-semibold text-slate-50">{labels.matrixTitle}</h3>
@@ -341,7 +374,7 @@ export function SkillsCapabilityView({
                   <p className="text-xs text-slate-500">—</p>
                 ) : (
                   byLevel[level].map((skill) => (
-                    <SkillMatrixCell key={skill.id} locale={locale} skill={skill} catalogs={catalogs} />
+                    <SkillMatrixCell key={skill.id} locale={locale} skill={skill} catalogs={catalogs} pageCopy={pageCopy} />
                   ))
                 )}
               </div>
@@ -363,6 +396,7 @@ export function SkillsCapabilityView({
               skill={skill}
               catalogs={catalogs}
               featured={featuredIds.has(skill.id)}
+              pageCopy={pageCopy}
             />
           ))}
         </div>

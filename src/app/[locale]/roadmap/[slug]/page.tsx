@@ -4,12 +4,15 @@ import { notFound } from "next/navigation";
 import { CarouselSlide, HorizontalCarousel } from "@/components/horizontal-carousel";
 import { CertificationCard } from "@/components/public-cards";
 import { Badge, Panel, Section } from "@/components/ui";
-import { labLevelLabels, milestoneDetailLabels, milestoneStepPrefix, roadmapVisualLabels } from "@/lib/constants";
+import { labLevelLabels, milestoneDetailLabels, milestoneStepPrefix } from "@/lib/constants";
 import {
+  certificationCardLabelsFromPage,
   getCatalogs,
   getCertifications,
+  getCertificationsPageContent,
   getMilestoneBySlug,
   getRoadmap,
+  getRoadmapPageContent,
   getSkills,
   indexMilestonesByPhase,
   resolveProviderLabel
@@ -28,13 +31,16 @@ export default async function RoadmapMilestonePage({
   const typedLocale = locale as Locale;
   const labels = milestoneDetailLabels[typedLocale];
 
-  const [milestone, roadmap, skills, certifications, catalogs] = await Promise.all([
+  const [milestone, roadmap, skills, certifications, catalogs, roadmapCopy, certPageCopy] = await Promise.all([
     getMilestoneBySlug(typedLocale, slug),
     getRoadmap(typedLocale),
     getSkills(typedLocale),
     getCertifications(typedLocale),
-    getCatalogs()
+    getCatalogs(),
+    getRoadmapPageContent(typedLocale),
+    getCertificationsPageContent(typedLocale)
   ]);
+  const certCardLabels = certificationCardLabelsFromPage(certPageCopy);
 
   if (!milestone) {
     notFound();
@@ -199,6 +205,7 @@ export default async function RoadmapMilestonePage({
                   state={cert.state}
                   date={cert.relevantDate}
                   note={cert.content.note}
+                  cardLabels={certCardLabels}
                   variant="browse"
                 />
               ))}
@@ -235,7 +242,7 @@ export default async function RoadmapMilestonePage({
                   <h3 className="line-clamp-2 text-lg font-semibold leading-snug text-slate-50">{item.content.title}</h3>
                   <p className="line-clamp-3 text-sm leading-relaxed text-slate-400">{item.content.summary}</p>
                   <Link href={`/${typedLocale}/roadmap/${item.slug}`} className="focus-ring inline-flex text-sm text-cyan-200 hover:text-cyan-100">
-                    {roadmapVisualLabels[typedLocale].openMilestoneCta}
+                    {roadmapCopy.openMilestoneCta}
                   </Link>
                 </Panel>
               </CarouselSlide>

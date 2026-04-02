@@ -1,7 +1,6 @@
 import { SkillsCapabilityView } from "@/components/skills-capability-view";
 import { Section } from "@/components/ui";
-import { getCatalogs, getSkills } from "@/lib/content";
-import { skillsPageContent } from "@/lib/constants";
+import { getCatalogs, getSkills, getSkillsPageContent } from "@/lib/content";
 import type { Locale } from "@/lib/types";
 
 export default async function SkillsPage({
@@ -17,14 +16,16 @@ export default async function SkillsPage({
   const view = typeof query.view === "string" && query.view === "list" ? "list" : "matrix";
   const tagFilter = typeof query.tag === "string" ? query.tag : undefined;
 
-  const [allSkills, catalogs] = await Promise.all([getSkills(typedLocale), getCatalogs()]);
+  const [allSkills, catalogs, pageCopy] = await Promise.all([
+    getSkills(typedLocale),
+    getCatalogs(),
+    getSkillsPageContent(typedLocale)
+  ]);
   const filtered = tagFilter ? allSkills.filter((s) => s.tags.includes(tagFilter)) : allSkills;
-
-  const copy = skillsPageContent[typedLocale];
 
   return (
     <div className="space-y-10">
-      <Section eyebrow={copy.eyebrow} title={copy.title} description={copy.description}>
+      <Section eyebrow={pageCopy.eyebrow} title={pageCopy.title} description={pageCopy.description}>
         <SkillsCapabilityView
           locale={typedLocale}
           skills={filtered}
@@ -32,6 +33,7 @@ export default async function SkillsPage({
           catalogs={catalogs}
           view={view}
           activeTagId={tagFilter}
+          pageCopy={pageCopy}
         />
       </Section>
     </div>

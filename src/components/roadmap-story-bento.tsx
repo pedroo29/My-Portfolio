@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 import { Badge, Panel } from "@/components/ui";
-import { milestoneStateLabels, milestoneStepPrefix, roadmapVisualLabels } from "@/lib/constants";
+import { milestoneStateLabels, milestoneStepPrefix } from "@/lib/constants";
 import { indexMilestonesByPhase } from "@/lib/content";
 import { cn } from "@/lib/utils";
-import type { Locale, MilestoneState, RoadmapMilestone, RoadmapPhase } from "@/lib/types";
+import type { Locale, LocalizedRoadmapPageContent, MilestoneState, RoadmapMilestone, RoadmapPhase } from "@/lib/types";
 
 type PhaseWithContent = RoadmapPhase & { content: { title: string; summary: string } };
 type MilestoneWithContent = RoadmapMilestone & { content: { title: string; summary: string } };
@@ -62,19 +62,19 @@ function stateCardAccent(state: MilestoneState) {
 }
 
 function PhaseStoryHeader({
-  locale,
   order,
   phaseIndex,
   title,
-  summary
+  summary,
+  roadmapCopy
 }: {
-  locale: Locale;
   order: number;
   phaseIndex: number;
   title: string;
   summary: string;
+  roadmapCopy: LocalizedRoadmapPageContent;
 }) {
-  const labels = roadmapVisualLabels[locale];
+  const labels = roadmapCopy;
   const accent = accentByIndex(phaseIndex);
 
   return (
@@ -106,14 +106,16 @@ function MilestoneBentoCard({
   locale,
   milestone,
   featured = false,
-  phaseIndex
+  phaseIndex,
+  roadmapCopy
 }: {
   locale: Locale;
   milestone: MilestoneWithContent;
   featured?: boolean;
   phaseIndex: number;
+  roadmapCopy: LocalizedRoadmapPageContent;
 }) {
-  const labels = roadmapVisualLabels[locale];
+  const labels = roadmapCopy;
   const tone = toneByState(milestone.state);
   const accent = accentByIndex(phaseIndex);
 
@@ -162,13 +164,15 @@ function MilestoneBentoCard({
 export function RoadmapStoryBento({
   locale,
   phases,
-  milestones
+  milestones,
+  roadmapCopy
 }: {
   locale: Locale;
   phases: PhaseWithContent[];
   milestones: MilestoneWithContent[];
+  roadmapCopy: LocalizedRoadmapPageContent;
 }) {
-  const labels = roadmapVisualLabels[locale];
+  const labels = roadmapCopy;
 
   if (phases.length === 0) {
     return (
@@ -194,11 +198,11 @@ export function RoadmapStoryBento({
           >
             <div className="flex items-start justify-between gap-3">
               <PhaseStoryHeader
-                locale={locale}
                 order={phase.order}
                 phaseIndex={phaseIndex}
                 title={phase.content.title}
                 summary={phase.content.summary}
+                roadmapCopy={roadmapCopy}
               />
               <span className={cn("hidden rounded-full border px-3 py-1 text-xs font-medium md:inline-flex", accent.chip)}>
                 {items.length} {labels.itemCountLabel}
@@ -211,9 +215,23 @@ export function RoadmapStoryBento({
               </Panel>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {hero ? <MilestoneBentoCard locale={locale} phaseIndex={phaseIndex} milestone={hero} featured /> : null}
+                {hero ? (
+                  <MilestoneBentoCard
+                    locale={locale}
+                    phaseIndex={phaseIndex}
+                    milestone={hero}
+                    featured
+                    roadmapCopy={roadmapCopy}
+                  />
+                ) : null}
                 {rest.map((item) => (
-                  <MilestoneBentoCard key={item.id} locale={locale} phaseIndex={phaseIndex} milestone={item} />
+                  <MilestoneBentoCard
+                    key={item.id}
+                    locale={locale}
+                    phaseIndex={phaseIndex}
+                    milestone={item}
+                    roadmapCopy={roadmapCopy}
+                  />
                 ))}
               </div>
             )}

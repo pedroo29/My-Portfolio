@@ -1,16 +1,25 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { MediaAsset } from "@/lib/types";
 
 export function MediaLibrary({ items }: { items: MediaAsset[] }) {
   const router = useRouter();
+  const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    if (!message) return;
+    const id = requestAnimationFrame(() => {
+      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [message]);
 
   const filtered = useMemo(
     () =>
@@ -21,13 +30,17 @@ export function MediaLibrary({ items }: { items: MediaAsset[] }) {
   );
 
   return (
-    <div className="space-y-6">
+    <div ref={rootRef} className="space-y-6 scroll-mt-6">
+      {message ? (
+        <div role="status" aria-live="polite" className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+          {message}
+        </div>
+      ) : null}
+
       <div className="rounded-3xl border border-slate-800 bg-slate-950/50 p-6">
         <h1 className="text-3xl font-semibold text-slate-50">Media library</h1>
         <p className="mt-2 text-sm text-slate-400">Upload, preview and reuse media snippets for labs.</p>
       </div>
-
-      {message ? <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{message}</div> : null}
 
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
